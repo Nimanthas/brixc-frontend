@@ -1,0 +1,58 @@
+//import routes
+const routes = require('express').Router();
+
+const createnewyy = require('./newyy');
+const listofyy = require('./listofyy');
+const uploadolr = require('./uploadolr');
+const addplmcolordata = require('./addplmcolordata');
+const addplmitemdata = require('./addplmitemdata');
+const getplmitemsindb = require('./getplmitemsindb');
+const updateorderdate = require('./updateorderdate');
+const getiteminbom = require('./getiteminbom');
+const getsizeinbom = require('./getsizeinbom');
+const updatebomitemdata = require('./updatebomitemdata');
+const olritemprocess = require('./olritemprocess');
+const olrlineprocess = require('./olrlineprocess');
+const getolrdata = require('./getolrdata');
+const getolrdatacolorgroup = require('./getolrdatacolorgroup');
+const getolrsizes = require('./getolrsizes');
+const updatesizeitemdata = require('./updatesizeitemdata');
+const updateyyplmdata = require('./updateyyplmdata');
+const getplmcolorways = require('./getplmcolorways');
+const syncgraphics = require('./syncgraphics');
+const syncdyewash = require('./syncdyewash');
+const plmlineprocess = require('./plmlineprocess');
+const plmlineprocesspvh = require('./plmlineprocesspvh');
+const getplmbomitems = require('./getplmbomitems');
+const getsizetemplates = require('./getsizetemplates');
+const getolrfileheaders = require('./getolrfileheaders');
+const uploadolrfile = require('./uploadolrfile');
+
+routes.post('/createyy', createnewyy);
+routes.post('/listofyy', listofyy);
+routes.post('/uploadolr', uploadolr);
+routes.post('/addplmcolordata', addplmcolordata);
+routes.post('/addplmitemdata', addplmitemdata);
+routes.get('/getplmitemsindb/:fabyyid', getplmitemsindb);
+routes.post('/updateorderdate', updateorderdate);
+routes.get('/getiteminbom/:itemid', getiteminbom);
+routes.get('/getsizeinbom/:itemid', getsizeinbom);
+routes.post('/updatebomitemdata', updatebomitemdata);
+routes.get('/olritemprocess/:fabyyid/:sizetempid', olritemprocess);
+routes.get('/olrlineprocess/:fabyyid/:sizetempid', olrlineprocess);
+routes.get('/getolrdata/:fabyyid', getolrdata);
+routes.get('/getolrdatacolorgroup/:fabyyid', getolrdatacolorgroup);
+routes.get('/getolrsizes/:fabyyid', getolrsizes);
+routes.post('/updatesizeitemdata', updatesizeitemdata);
+routes.post('/updateyyplmdata', updateyyplmdata);
+routes.get('/getplmcolorways/:fabyyid', getplmcolorways);
+routes.get('/syncgraphics/:fabyyid', syncgraphics);
+routes.get('/syncdyewash/:fabyyid', syncdyewash);
+routes.get('/plmlineprocess/:fabyyid', plmlineprocess);
+routes.get('/plmlineprocesspvh/:fabyyid', plmlineprocesspvh);
+routes.get('/getplmbomitems/:fabyyid', getplmbomitems);
+routes.get('/getsizetemplates/:fabyyid', getsizetemplates);
+routes.get('/getolrfileheaders/:fabyyid', getolrfileheaders);
+routes.post('/uploadolrfile/:fabyyid/:sizetempid', uploadolrfile);
+
+module.exports = routes;

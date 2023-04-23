@@ -1,0 +1,10 @@
+GET http://localhost:1500/plmaccess/plmsession
+
+
+POST http://localhost:1500/plmaccess/plmseasonslist
+content-type: application/json
+
+{
+    "styleid":"148916",
+    "token":"SecurityTokenURL=centric://_CS_SecurityToken/becc7868ac15002b18818e8b986273b9"
+}

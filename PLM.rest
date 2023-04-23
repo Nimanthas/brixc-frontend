@@ -1,0 +1,80 @@
+POST https://brandix.centricsoftware.com/csi-requesthandler/api/v2/session
+content-type: application/json
+
+{
+    "username":"BFF API User",
+    "password":"P@ssw0rd@1"
+}
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/part_materials/C19633425
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/materials/C0%252F61%257CMaterial
+
+
+//POST https://brandix-test.centricsoftware.com/csi-requesthandler/api/v2/styles/0001
+//content-type: application/json
+
+//{
+    //"username":"API_User_BFF_SampleRequest",
+    //"password":"test@2021"
+//}
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/styles?node_name=151279&active=true&bx_style_status=Confirmed&skip=0&limit=50
+
+//GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/styles?id=1663516
+
+//GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/seasons/C62406
+
+//GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/apparel_boms/C3304576
+
+//GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/styles/C3175734/data_sheets/apparel_boms
+
+//GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/materials/C3304576
+
+//GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/material_plan_placements/C3175734
+
+//GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/part_materials/C18291096
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/apparel_boms/C19127060
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/apparel_bom_revisions/C19130165
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/part_materials/C19130172
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/materials/C544491
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/colorways/C18291044
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/color_materials/C16149999
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/apparel_bom_revisions/C18291096/items/part_materials?
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/supplier_items/C10515128
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/materials/C544491
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/material_types/C2308
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/part_materials/C18290920
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/styles?node_name=10216581&active=true&bx_style_status=Confirmed
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/seasons/C775881
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/styles/C18290833/data_sheets/apparel_boms?state=APPROVED
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/seasons/C15454801
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/apparel_boms/C18290906
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/seasons/C18290833
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/apparel_bom_revisions/C18291096
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/supplier_item_revisions/C14077138
+
+//---------------------
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/part_materials/C18290920
+
+GET https://brandix.centricsoftware.com/csi-requesthandler/api/v2/color_materials/C15025509

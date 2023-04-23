@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ Type: "ERROR", Msg: "Oops! can't find correct dataset to post upload olr data." });
     }
     // Select the first matching config data
-    const config = filteredConfig[0];
+    const config = filteredConfig[0]?.olrValidations;
     // Read the uploaded file as an XLSX workbook
     const workbook = XLSX.read(files.file.data);
     // Select the sheet with the specified name from the workbook

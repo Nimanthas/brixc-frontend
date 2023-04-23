@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
 
     res.status(200).json({ Type: "SUCCESS", Data: output });
   } catch (error) {
-    console.log("error in getfabricyyrequestrefresheddata :", error);
+    //console.log("error in getfabricyyrequestrefresheddata :", error);
     res.status(400).json({ Type: "ERROR", Msg: error.message });
   }
 };
@@ -57,7 +57,7 @@ async function getplmitemsindb(req, res) {
                     pv.vpono = mi.vpono AND pv.gmt_color_order = mi.gmt_color_order;`;
     return await pool.query(sqlqry);
   } catch (error) {
-    console.log("error in getplmitemsindb: ", error);
+    //console.log("error in getplmitemsindb: ", error);
     // Handle errors by sending error response with error message
     res.status(200).json({ Type: "ERROR", Msg: error.message });
   }
@@ -84,7 +84,7 @@ async function getfabricyyrequestdetails(req, res) {
     // Execute SQL query and get result rows
     return await pool.query(sqlqry);
   } catch (error) {
-    console.log("error in getfabricyyrequestdetails: ", error);
+    //console.log("error in getfabricyyrequestdetails: ", error);
     // Handle errors by sending error response with error message
     res.status(400).json({ Type: "ERROR", Msg: error.message });
   }
@@ -108,7 +108,7 @@ async function getplmbomitems(req, res) {
 
     return await pool.query(sqlqry);
   } catch (error) {
-    console.log("error in getplmbomitems: ", error);
+    //console.log("error in getplmbomitems: ", error);
     // Handle errors by sending error response with error message
     res.status(200).json({ Type: "ERROR", Msg: error.message });
   }
@@ -131,7 +131,7 @@ async function getplmcolorways(req, res) {
 
     return await pool.query(sqlqry);
   } catch (error) {
-    console.log("error in getplmcolorways: ", error);
+    //console.log("error in getplmcolorways: ", error);
     // Handle errors by sending error response with error message
     res.status(200).json({ Type: "ERROR", Msg: error.message });
   }
@@ -153,7 +153,7 @@ async function getolrsizes(req, res) {
 
     return await pool.query(sqlqry);
   } catch (error) {
-    console.log("error in getplmcolorways: ", error);
+    //console.log("error in getplmcolorways: ", error);
     // Handle errors by sending error response with error message
     res.status(200).json({ Type: "ERROR", Msg: error.message });
   }
@@ -227,7 +227,7 @@ async function getsizetemplates(req, res) {
 
     return await pool.query(sqlqry);
   } catch (error) {
-    console.log("error in getsizetemplates: ", error);
+    // console.log("error in getsizetemplates: ", error);
     // Handle errors by sending error response with error message
     res.status(200).json({ Type: "ERROR", Msg: error.message });
   }

@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
     if (filteredConfig?.length === 0) {
       throw new Error("Oops! can't find correct dataset to post upload olr data.");
     }
-    const config = filteredConfig[0];
+    const config = filteredConfig[0]?.plmValidations;
     const { plmSkipValue, letterNumber } = config;
     if (!Object.keys(req.body).length) { return res.status(400).json({ Type: 'ERROR', Msg: 'Oops! empty data set in request header.' }); }
     if (Object.keys(req.body).length < 3) { return res.status(400).json({ Type: 'ERROR', Msg: "Oops! can't find correct dataset input in request header." }); }

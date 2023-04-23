@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
         if (filteredConfig?.length === 0) {
             throw new Error("Oops! can't find correct dataset to post upload olr data.");
         }
-        const config = filteredConfig[0];
+        const config = filteredConfig[0]?.plmValidations;
         const { matTypes, plmSkipValue } = config;
 
         for (const itemId of itemlistids) {

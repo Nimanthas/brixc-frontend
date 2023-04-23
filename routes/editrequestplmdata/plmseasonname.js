@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
     if (filteredConfig?.length === 0) {
       throw new Error("Oops! can't find correct dataset to get season name.");
     }
-    const config = filteredConfig[0];
+    const config = filteredConfig[0]?.plmValidations;
     const { letterNumber } = config;
 
     if (!letterNumber.test(val_season)) return '';

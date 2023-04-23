@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     if (!filteredConfig?.length) {
       throw new Error("Oops! can't find correct dataset to post upload olr data.");
     }
-    const config = filteredConfig[0];
+    const config = filteredConfig[0]?.plmValidations;
 
     const plmBomDetails = await getplmbomrevisedata(req, res, plmToken);
     //console.log('BOM data output: ', plmBomDetails);
@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
     }
   } catch (error) {
     //console.log('Error in post plm data:', error);
-    res.status(400).json({ Type: 'ERROR', Msg: error.message });
+    return res.status(500).json({ Type: "ERROR", Msg: String(error) });
   }
 };
 
@@ -85,7 +85,7 @@ async function getplmbomrevisedata(req, res, plmToken) {
     return { BomData: data?.data, Colorways: colorways };
   } catch (error) {
     // If an error occurs, send an HTTP response with an appropriate error status code and a JSON body containing an error message
-    res.status(error.response?.status ?? 500).json({ Type: 'ERROR', Message: error.message });
+    throw new Error(`Failed to get the revised bom item details. Error: ${error}`);
   }
 };
 //End: get plm bom revision data
@@ -108,7 +108,8 @@ async function getplmbomitems(req, res, itemlistids, plmToken, config) {
       const nameofitem = await getitemname(actual, plmToken, plmSkipValue);
       const dataofsupplier = await getsupplierdata(bom_line_quote, plmToken, plmSkipValue);
       const nameofmattype = await getmaterialtype(nameofitem.product_type, plmToken, plmSkipValue);
-      const minimumcuttablewidth = 54; //await getcuttablewidth(dataofsupplier.latest_revision, plmToken, plmSkipValue);
+      const minimumcuttablewidth = await getcuttablewidth(dataofsupplier.latest_revision, plmToken, plmSkipValue);
+
 
       const isMatch = matTypes.some(matType => {
         if (matType?.matType !== nameofmattype?.node_name) return false;
@@ -126,10 +127,117 @@ async function getplmbomitems(req, res, itemlistids, plmToken, config) {
     }
     return items_fabric;
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ Type: 'ERROR', Msg: error.message });
+    //console.error(error);
+    throw new Error(`Failed to get the plm bom item details. Error: ${error}`);
   }
 };
+//Transform excel json output into standard pre-defined json
+function transformArray(inputArray, config, filterValue) {
+  const { outputModel, fieldMappings, groupingSpec, arrayKeySpecs, mergeKeys, filterKey, mandatoryKeys, concatenateKeys } = config;
+
+  // Validate that all mandatory keys are present in the input objects
+  if (mandatoryKeys != undefined && mandatoryKeys != null && mandatoryKeys.length > 0) {
+    const missingKeys = mandatoryKeys.filter(key => !inputArray.some(obj => obj.hasOwnProperty(key)));
+    if (missingKeys.length > 0) {
+      throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
+    }
+  } else {
+    throw new Error(`Mandatory columns are not defined for this customer.`);
+  }
+
+  //Transform filter value
+  filterValue = filterValue?.toLowerCase().trim();
+
+  const outputArray = inputArray
+    .filter(inputObj => inputObj[filterKey]?.toLowerCase().trim() === filterValue)
+    .map(inputObj => {
+      // Rename fields
+      const outputObj = {};
+      Object.entries(inputObj).forEach(([inputKey, inputValue]) => {
+        const mapping = fieldMappings?.find(m => m.inputKey === inputKey);
+        const outputKey = mapping ? mapping.outputKey : inputKey;
+        const config = mapping ? mapping.config : undefined;
+        let outputValue = inputValue;
+        if (config) {
+          if (config.split && inputValue != undefined) {
+            outputValue = String(inputValue).split(config.split);
+          }
+          if (config.trim) {
+            if (Array.isArray(outputValue)) {
+              outputValue = outputValue.map(v => v.trim());
+            } else if (outputValue != undefined) {
+              outputValue = String(outputValue).trim();
+            }
+          }
+          if (config.replace) {
+            if (Array.isArray(outputValue)) {
+              outputValue = outputValue.map(v =>
+                config.replace.reduce((prev, curr) => prev.replace(curr, ''), v)
+              );
+            } else {
+              outputValue = config.replace.reduce(
+                (prev, curr) => prev.replace(curr, ''),
+                String(outputValue)
+              );
+            }
+          }
+        }
+        outputObj[outputKey] = outputValue;
+      });
+
+      // Concatenate keys
+      if (concatenateKeys) {
+        concatenateKeys?.forEach(concatenateKey => {
+          const { newKey, keysToConcatenate, delimiter } = concatenateKey;
+          const valuesToConcatenate = keysToConcatenate.map(k => outputObj[k]).filter(v => v !== undefined);
+          const concatenatedValue = valuesToConcatenate.join(delimiter);
+          outputObj[newKey] = concatenatedValue;
+        });
+      }
+
+      // Add grouping fields
+      if (groupingSpec) {
+        const { field, spans } = groupingSpec;
+        const fieldValue = outputObj[field];
+        spans?.forEach(([start, end], i) => {
+          const key = `${field}_${start}_${end}`;
+          outputObj[key] = fieldValue?.substring(start, end) || undefined;
+        });
+      }
+
+      // Add array keys
+      if (arrayKeySpecs) {
+        arrayKeySpecs?.forEach(spec => {
+          outputObj[spec.key] = spec.repeatValue;
+        });
+      }
+
+      // Merge keys
+      if (mergeKeys) {
+        mergeKeys?.forEach(key => {
+          const valuesToMerge = Object.keys(outputObj)
+            .filter(k => k.startsWith(key))
+            .map(k => outputObj[k])
+            .filter(v => v !== undefined);
+          outputObj[key] = valuesToMerge.join('_');
+        });
+      }
+
+      return outputObj;
+    });
+
+  // Rename output fields to match model and filter out any extra keys
+  return outputArray?.map(outputObj => {
+    const renamedOutputObj = {};
+    Object.entries(outputObj).forEach(([outputKey, outputValue]) => {
+      const inputKey = Object.keys(outputModel).find(k => outputModel[k] === outputKey);
+      if (inputKey) {
+        renamedOutputObj[inputKey] = outputValue;
+      }
+    });
+    return renamedOutputObj;
+  });
+}
 //get item name by item code
 async function getitemname(val_item, plmToken, plmSkipValue) {
   try {
@@ -139,7 +247,7 @@ async function getitemname(val_item, plmToken, plmSkipValue) {
     return { node_name: response?.data.node_name, description: response?.data.description, product_type: response?.data.product_type };
   } catch (error) {
     //console.error(error);
-    throw error;
+    throw new Error(`Failed to get the item details for item: ${val_item}. Error: ${error}`);
   }
 };
 //get latest supplier by suplier id
@@ -151,7 +259,7 @@ async function getsupplierdata(valSupplier, plmToken, plmSkipValue) {
     return { node_name: resp?.data.node_name, latest_revision: resp?.data?.latest_revision };
   } catch (error) {
     //console.error(error);
-    throw error;
+    throw new Error(`Failed to get the supplier details for suplier: ${valSupplier}. Error: ${error}`);
   }
 };
 //get material types
@@ -163,11 +271,12 @@ async function getmaterialtype(val_materialtype, plmToken, plmSkipValue) {
     return { node_name: resp_3?.status === 200 ? resp_3?.data.node_name : "" };
   } catch (error) {
     //console.error(error);
-    throw error;
+    throw new Error(`Failed to get the material type details for material type: ${val_materialtype}. Error: ${error}`);
   }
 };
 //get revised supplier item by item
 async function getcuttablewidth(val_supp_item_rev, plmToken, plmSkipValue) {
+  return '54'; //This was added becuase there is an error in plm api
   try {
     if (!val_supp_item_rev || val_supp_item_rev === plmSkipValue) { return { cw: '' }; }
     const supplierItem = encodeURIComponent(val_supp_item_rev);
@@ -176,7 +285,7 @@ async function getcuttablewidth(val_supp_item_rev, plmToken, plmSkipValue) {
     return { cw: '' };
   } catch (error) {
     //console.error(error);
-    return error;
+    throw new Error(`Failed to get the cuttable width for supplier item: ${val_supp_item_rev}. Error: ${error}`);
   }
 };
 //End: get plm bom items
@@ -228,7 +337,7 @@ async function updateplmcolordata(req, res, colorset, config) {
     } catch (error) {
       // If an error occurs, roll back the transaction and throw the error
       await client.query('ROLLBACK');
-      res.status(500).json({ Type: 'ERROR', Msg: error.message });
+      throw new Error(`Failed to insert plm colorways details into table. Error: ${error}`);
     } finally {
       // Release the database connection
       client.release();
@@ -236,7 +345,7 @@ async function updateplmcolordata(req, res, colorset, config) {
   } catch (error) {
     // If an error occurs, log it and send an error response
     //console.error(err);
-    res.status(500).json({ Type: 'ERROR', Msg: error.message });
+    throw new Error(`Failed to update plm color data. Error: ${error}`);
   }
 };
 // Map a color name to a new name using the dye roots
@@ -248,7 +357,7 @@ function dyerootmap(value, dyeRoots) {
     }
     return result;
   } catch (error) {
-    throw error;
+    throw new Error(`Failed to get the dye root map for color: ${value}. Error: ${error}`);
   }
 };
 //End: get plm revised bom color details
@@ -259,7 +368,9 @@ async function postplmitemdata(req, res, itemset, plmToken, config) {
   try {
     const { fabric_yyid, isAmendmant } = req.body;
     const { plmSkipValue, letterNumber } = config;
-    const promises = itemset.map(async (obj_itemset) => {
+    //console.log('plm fabric items: ', itemset);
+
+    const promises = itemset?.map(async (obj_itemset) => {
       const { color_way_colors, ...rest } = obj_itemset;
       const sanitizedRest = Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, sanitizeString(v)]));
       let inc_val = 0;
@@ -285,7 +396,7 @@ async function postplmitemdata(req, res, itemset, plmToken, config) {
     await Promise.all(promises);
     return { Type: 'SUCCESS', Msg: 'success' };
   } catch (error) {
-    return res.status(500).json({ Type: 'ERROR', Msg: error.message });
+    throw new Error(`Failed to post plm item related data. Error: ${error}`);
   }
 };
 //get color names
@@ -295,7 +406,7 @@ async function getcolorname(val_color, plmSkipValue, letterNumber, plmToken, plm
     const response = await axios.get(`${plmweburl}/csi-requesthandler/api/v2/color_materials/${val_color}`, { headers: { Cookie: `${plmToken}` } });
     return { node_name: response?.data.node_name, node_id: response?.data.id, colorcode: val_color };
   } catch (error) {
-    throw error;
+    throw new Error(`Failed to fletch the color related data for color: ${val_color}. Error: ${error}`);
   }
 }
 //sanitize prase
@@ -339,7 +450,7 @@ async function postplmyydata(req, res, plmToken, config) {
     await pool.query(sqlqry);
     return { Type: 'SUCCESS', Msg: 'success' };
   } catch (error) {
-    res.status(200).json({ Type: "ERROR", Msg: "Oops! We found some errors query. " + error.message });
+    throw new Error(`Failed to insert the data to fabric yy- details. Error: ${error}`);
   }
 };
 //get bom name
@@ -356,20 +467,21 @@ async function getbomname(val_bom, token, letterNumber) {
     return data.node_name || '';
   } catch (error) {
     //console.error(error);
-    throw error;
+    throw new Error(`Failed to fletch the season related data for bom id: ${val_bom}. Error: ${error}`);
   }
 }
 //get season name
 async function getseasonname(val_season, letterNumber, plmToken) {
   try {
-    if (!letterNumber.match(val_season)) return '';
+    if (!val_season?.match(letterNumber)) return '';
     const { data, status } = await axios.get(`${plmweburl}/csi-requesthandler/api/v2/seasons/${val_season}`, { headers: { Cookie: plmToken } });
     return status === 200 ? data.node_name : '';
   } catch (error) {
     //console.error(error);
-    throw error;
+    throw new Error(`Failed to fetch the season related data for season id: ${val_season}. Error: ${error}`);
   }
 }
+
 //End: save yy data that retieved from plm
 //End Step 02
 

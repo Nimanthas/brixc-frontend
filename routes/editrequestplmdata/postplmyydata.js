@@ -14,11 +14,11 @@ module.exports = async (req, res) => {
 
     const filteredConfig = configData.filter(config => config.cus_id === 1);
 
-    if (filteredConfig?.length === 0) {
+    if (!filteredConfig?.length) {
       throw new Error("Oops! can't find correct dataset to post upload olr data.");
     }
 
-    const config = filteredConfig[0];
+    const config = filteredConfig[0]?.plmValidations;
     const { letterNumber } = config;
 
     const var_fabricyyid = req.body.fabric_yyid;

@@ -18,12 +18,12 @@ module.exports = async (req, res) => {
     const filteredConfig = configData.filter(config => config.cus_id === 1);
 
     // Check if the filtered config data is empty
-    if (filteredConfig.length === 0) {
+    if (!filteredConfig?.length) {
       throw new Error("Oops! can't find correct dataset to post plm colors.");
     }
 
     // Get the dye roots from the filtered config data
-    const { dyeRoots } = filteredConfig[0];
+    const { dyeRoots } = filteredConfig[0]?.plmValidations;
 
     // Connect to the database
     const client = await pool.connect();

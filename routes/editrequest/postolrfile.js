@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
   try {
     // Check if the file parameter is missing from the request
     if (!files?.file) {
-      return res.status(400).json({ Type: "SUCCESS", Msg: 'Oops! no file was uploaded.' });
+      return res.status(400).json({ Type: "ERROR", Msg: 'Oops! no files were found in request inputs.' });
     }
     // Filter config data based on customer ID
     const filteredConfig = configData.filter(config => config.cus_id === 1);
@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ Type: "ERROR", Msg: "Oops! can't find correct dataset to post upload olr data." });
     }
     // Select the first matching config data
-    const config = filteredConfig[0];
+    const config = filteredConfig[0]?.olrValidations;
     // Read the uploaded file as an XLSX workbook
     const workbook = XLSX.read(files.file.data);
     // Select the sheet with the specified name from the workbook
@@ -50,6 +50,7 @@ module.exports = async (req, res) => {
     }
     // Transform the sheet data using the specified config and request data
     const transformedData = await transformArray(data, config, requestData[0].cus_sty_no);
+    //console.log("excel transformed data: ", transformedData);
     // Check if the transformed data is empty
     if (!transformedData?.length) {
       return res.status(400).json({ Type: "ERROR", Msg: `Oops! no data found in olr sheet related to style: ${requestData[0].cus_sty_no}. This can be caused by incorrect file format or the style details is not found.` });
@@ -67,6 +68,7 @@ module.exports = async (req, res) => {
       }
       //Join data
       joinedData = innerJoin(transformedData, sizeTemplateData, config.joinParameters.data01Key, config.joinParameters.data02Key);
+      //console.log("join output od size teplate and excel transformed data: ", joinedData);
     }
     //Insert processed data into olr table
     await insertDataintoOLRTable(joinedData, fabyyid);
@@ -79,7 +81,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({ Type: "SUCCESS", Msg: "olr list added successfully !", data: joinedData, fabyyid });
   } catch (error) {
     //Return error
-    return res.status(400).json({ Type: "ERROR", Msg: String(error) });
+    return res.status(500).json({ Type: "ERROR", Msg: String(error) });
   }
 };
 //Transform excel json output into standard pre-defined json
@@ -91,11 +93,9 @@ function transformArray(inputArray, config, filterValue) {
     const missingKeys = mandatoryKeys.filter(key => !inputArray.some(obj => obj.hasOwnProperty(key)));
     if (missingKeys.length > 0) {
       throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
-      return;
     }
   } else {
     throw new Error(`Mandatory columns are not defined for this customer.`);
-    return;
   }
 
   //Transform filter value
@@ -340,7 +340,6 @@ async function insertDataintoOLRTable(data, fabyy_id) {
     // If an error occurs, roll back the transaction and throw an error with a message that includes the original error
     await client.query('ROLLBACK');
     throw new Error(`Failed to insert data into olr_data table. Error: ${error}`);
-
   } finally {
     // Release the database connection back to the pool
     client.release();
@@ -390,11 +389,11 @@ async function processOLRItems(fabyyid, sizetempid) {
 
     await client.query('COMMIT');
 
-    return { Type: "SUCCESS", Msg: "Item List Processing Successfully." };
-  } catch (e) {
+    return { Type: "SUCCESS", Msg: "item list processed successfully." };
+  } catch (error) {
     await client.query('ROLLBACK');
-    console.error(e);
-    res.status(500).json({ Type: "ERROR", Msg: "Error Processing Item List" });
+    //console.error(error);
+    throw new Error(`Failed to process olr items. Error: ${error}`);
   } finally {
     client.release();
   }
@@ -420,14 +419,15 @@ async function processOLRLines(fabyyid, sizetempid) {
 
       const insertrow = await client.query(`INSERT INTO olr_items(fabyy_id,color, flex, vpono, division, garmentway, prod_plant, computecolordesc) VALUES ('${fabyyid}','${obj_olrcolor.colorname}','${obj_olrcolor.flex}','${obj_olrcolor.vpono}','${obj_olrcolor.division}','','','${obj_olrcolor.computecolordesc}');`);
       let valinc = 0;
+      if (insertrow) {
+        await Promise.all(result_get_olrsizes.rows.map(async (row_olrsizes) => {
+          const obj_olrsizes = row_olrsizes;
+          valinc = valinc + 1;
 
-      await Promise.all(result_get_olrsizes.rows.map(async (row_olrsizes) => {
-        const obj_olrsizes = row_olrsizes;
-        valinc = valinc + 1;
-
-        const qry_update = `UPDATE olr_items SET s${valinc}_name='${obj_olrsizes.sizename}', s${valinc}_qty=temptable.orderqty FROM (SELECT COALESCE(SUM(orderqty),0) as orderqty FROM olr_data WHERE fabyy_id='${fabyyid}' AND mastcolordesc='${obj_olrcolor.colorname}' AND custsizedesc='${obj_olrsizes.sizename}' AND vpono='${obj_olrcolor.vpono}') AS temptable WHERE fabyy_id='${fabyyid}' AND color='${obj_olrcolor.colorname}' AND vpono='${obj_olrcolor.vpono}';`
-        await client.query(qry_update);
-      }));
+          const qry_update = `UPDATE olr_items SET s${valinc}_name='${obj_olrsizes.sizename}', s${valinc}_qty=temptable.orderqty FROM (SELECT COALESCE(SUM(orderqty),0) as orderqty FROM olr_data WHERE fabyy_id='${fabyyid}' AND mastcolordesc='${obj_olrcolor.colorname}' AND custsizedesc='${obj_olrsizes.sizename}' AND vpono='${obj_olrcolor.vpono}') AS temptable WHERE fabyy_id='${fabyyid}' AND color='${obj_olrcolor.colorname}' AND vpono='${obj_olrcolor.vpono}';`
+          await client.query(qry_update);
+        }));
+      } else { throw new Error(`failed to insert the data into olr_items table.`); }
     });
 
     await Promise.all(insertPromises);
@@ -435,7 +435,7 @@ async function processOLRLines(fabyyid, sizetempid) {
     return { Type: "SUCCESS", Msg: "item list successfully added." };
   } catch (error) {
     await client.query('ROLLBACK');
-    res.status(200).json({ Type: "ERROR", Msg: error.message });
+    throw new Error(`Failed to process olr lines. Error: ${error}`);
   } finally {
     client.release();
   }

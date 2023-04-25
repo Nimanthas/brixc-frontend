@@ -7,6 +7,10 @@ const getfabricyyrequestrefresheddata = require('./getfabricyyrequestrefreshedda
 const getplmitemsindb = require('./getplmitemsindb');
 const updateolritemgraphicdetail = require('./updateolritemgraphicdetail');
 const updateolritemdyeandwashdetail = require('./updateolritemdyeandwashdetail');
+const postolrsizeitemdata = require('./postolrsizeitemdata');
+const getolrsizewiseitem = require('./getolrsizewiseitem');
+const getplmiteminbom = require('./getplmiteminbom');
+const postplmbomitemdata = require('./postplmbomitemdata');
 
 routes.post('/createnewrequest', createnewrequest);
 routes.post('/postolrfile/:fabyyid/:sizetempid', postolrfile);
@@ -14,5 +18,9 @@ routes.get('/getfabricyyrequestrefresheddata/:fabyyid', getfabricyyrequestrefres
 routes.get('/getplmitemsindb/:fabyyid', getplmitemsindb);
 routes.post('/updateolritemgraphicdetail/:fabyyid', updateolritemgraphicdetail);
 routes.post('/updateolritemdyeandwashdetail/:fabyyid', updateolritemdyeandwashdetail);
+routes.post('/postolrsizeitemdata', postolrsizeitemdata);
+routes.post('/getolrsizewiseitem/:item_id', getolrsizewiseitem);
+routes.post('/getplmiteminbom/:item_id', getplmiteminbom);
+routes.post('/postplmbomitemdata/:fabyyid', postplmbomitemdata);
 
 module.exports = routes;

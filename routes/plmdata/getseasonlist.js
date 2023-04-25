@@ -20,6 +20,6 @@ module.exports = async (req, res) => {
         }));
         res.status(200).json({ Type: 'SUCCESS', Data: seasonlist });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(200).json({ error: error.message });
     }
 };

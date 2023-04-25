@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
   } catch (e) {
     await client.query('ROLLBACK');
     console.error(e);
-    res.status(500).json({ Type: "ERROR", Msg: "Error Processing Item List" });
+    res.status(200).json({ Type: "ERROR", Msg: "Error Processing Item List" });
   } finally {
     client.release();
   }

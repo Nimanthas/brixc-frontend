@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     await client.query('ROLLBACK');
-    res.status(500).json({ Type: 'ERROR', Msg: 'an error occurred while syncing dye and wash details.' + error.message });
+    res.status(200).json({ Type: 'ERROR', Msg: 'an error occurred while syncing dye and wash details.' + error.message });
   } finally {
     client.release();
     res.status(200).json({ Type: 'SUCCESS', Msg: 'dye and wash details syncing completed.' });

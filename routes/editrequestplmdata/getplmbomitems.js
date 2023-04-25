@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
         res.status(200).json({ Type: 'SUCCESS', Data: items_fabric });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ Type: 'ERROR', Msg: error.message });
+        res.status(200).json({ Type: 'ERROR', Msg: error.message });
     }
 };
 

@@ -59,6 +59,7 @@ module.exports = async (req, res) => {
     await deleteOLRDetailsFromOLRDatabyRequestId(fabyyid);
     // Join the transformed data with additional data based on the specified join parameters, if applicable
     let joinedData = transformedData;
+    //console.log('joinedData: ', joinedData);
     if (config.joinParameters?.join) {
       // Retrieve size template data related to the specified ID
       const sizeTemplateData = await getSizeNamesbyTemplateId(sizetempid);
@@ -78,119 +79,181 @@ module.exports = async (req, res) => {
     await processOLRLines(fabyyid, sizetempid);
 
     //Return sucess response
-    return res.status(200).json({ Type: "SUCCESS", Msg: "olr list added successfully !", data: joinedData, fabyyid });
+    return res.status(200).json({ Type: "SUCCESS", Msg: `olr list added successfully. ${joinedData?.length} lines were saved.`, data: joinedData, fabyyid });
   } catch (error) {
     //Return error
-    return res.status(500).json({ Type: "ERROR", Msg: String(error) });
+    return res.status(200).json({ Type: "ERROR", Msg: String(error) });
   }
 };
 //Transform excel json output into standard pre-defined json
 function transformArray(inputArray, config, filterValue) {
-  const { outputModel, fieldMappings, groupingSpec, arrayKeySpecs, mergeKeys, filterKey, mandatoryKeys, concatenateKeys } = config;
+  try {
+    const { outputModel, fieldMappings, groupingSpec, arrayKeySpecs, mergeKeys, filterKey, mandatoryKeys, concatenateKeys } = config;
 
-  // Validate that all mandatory keys are present in the input objects
-  if (mandatoryKeys != undefined && mandatoryKeys != null && mandatoryKeys.length > 0) {
-    const missingKeys = mandatoryKeys.filter(key => !inputArray.some(obj => obj.hasOwnProperty(key)));
-    if (missingKeys.length > 0) {
-      throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
+    // Validate that all mandatory keys are present in the input objects
+    if (mandatoryKeys != undefined && mandatoryKeys != null && mandatoryKeys.length > 0) {
+      const missingKeys = mandatoryKeys.filter(key => !inputArray.some(obj => obj.hasOwnProperty(key)));
+      if (missingKeys.length > 0) {
+        throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
+      }
+    } else {
+      throw new Error(`Mandatory columns are not defined for this customer.`);
     }
-  } else {
-    throw new Error(`Mandatory columns are not defined for this customer.`);
-  }
 
-  //Transform filter value
-  filterValue = filterValue?.toLowerCase().trim();
+    //Transform filter value
+    filterValue = filterValue?.toLowerCase().trim();
 
-  const outputArray = inputArray
-    .filter(inputObj => inputObj[filterKey]?.toLowerCase().trim() === filterValue)
-    .map(inputObj => {
-      // Rename fields
-      const outputObj = {};
-      Object.entries(inputObj).forEach(([inputKey, inputValue]) => {
-        const mapping = fieldMappings?.find(m => m.inputKey === inputKey);
-        const outputKey = mapping ? mapping.outputKey : inputKey;
-        const config = mapping ? mapping.config : undefined;
-        let outputValue = inputValue;
-        if (config) {
-          if (config.split && inputValue != undefined) {
-            outputValue = String(inputValue).split(config.split);
-          }
-          if (config.trim) {
-            if (Array.isArray(outputValue)) {
-              outputValue = outputValue.map(v => v.trim());
-            } else if (outputValue != undefined) {
-              outputValue = String(outputValue).trim();
+    const outputArray = inputArray
+      .filter(inputObj => inputObj[filterKey]?.toLowerCase().trim() === filterValue)
+      .map(inputObj => {
+        // Rename fields
+        const outputObj = {};
+        Object.entries(inputObj).forEach(async ([inputKey, inputValue]) => {
+          const mapping = fieldMappings?.find(m => m.inputKey === inputKey);
+          const outputKey = mapping ? mapping.outputKey : inputKey;
+          const config = mapping ? mapping.config : undefined;
+          let outputValue = inputValue;
+          if (config) {
+            if (config?.split && inputValue != undefined) {
+              outputValue = String(inputValue).split(config.split);
+            }
+            if (config?.sub && inputValue != undefined) {
+              let textprocesser = String(inputValue);
+              let len = textprocesser.length;
+              if (config?.sub?.option == 'init') {
+                outputValue = textprocesser.substring(config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'last') {
+                outputValue = textprocesser.substring(len - config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'mid') {
+                outputValue = textprocesser.substring(config?.sub?.startnumber, config?.sub?.start + config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'find') {
+                let position = word.indexOf(config?.sub?.findchar);
+                outputValue = position > 0 ? textprocesser.substring(position, position + config?.sub?.numberofletters) : '';
+              }
+            }
+            if (config?.trim) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v => v.trim());
+              } else if (outputValue != undefined) {
+                outputValue = String(outputValue).trim();
+              }
+            }
+            if (config?.replace) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v =>
+                  config.replace.reduce((prev, curr) => prev.replace(curr, ''), v)
+                );
+              } else {
+                outputValue = config.replace.reduce(
+                  (prev, curr) => prev.replace(curr, ''),
+                  String(outputValue)
+                );
+              }
             }
           }
-          if (config.replace) {
-            if (Array.isArray(outputValue)) {
-              outputValue = outputValue.map(v =>
-                config.replace.reduce((prev, curr) => prev.replace(curr, ''), v)
-              );
-            } else {
-              outputValue = config.replace.reduce(
-                (prev, curr) => prev.replace(curr, ''),
-                String(outputValue)
-              );
+          outputObj[outputKey] = outputValue;
+        });
+
+        // Concatenate keys
+        if (concatenateKeys) {
+          concatenateKeys?.forEach(async concatenateKey => {
+            const { newKey, keysToConcatenate, delimiter, config } = concatenateKey;
+            const valuesToConcatenate = keysToConcatenate.map(k => outputObj[k]).filter(v => v !== undefined);
+            const concatenatedValue = valuesToConcatenate.join(delimiter);
+            let outputValue = concatenatedValue;
+            if (config?.split && concatenatedValue != undefined) {
+              outputValue = String(concatenatedValue).split(config.split);
             }
-          }
+            if (config?.sub && concatenatedValue != undefined) {
+              let textprocesser = String(concatenatedValue);
+              let len = textprocesser.length;
+              if (config?.sub?.option == 'init') {
+                outputValue = textprocesser.substring(config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'last') {
+                outputValue = textprocesser.substring(len - config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'mid') {
+                outputValue = textprocesser.substring(config?.sub?.startnumber, config?.sub?.start + config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'find') {
+                let position = word.indexOf(config?.sub?.findchar);
+                outputValue = position > 0 ? textprocesser.substring(position, position + config?.sub?.numberofletters) : '';
+              }
+            }
+            if (config?.trim) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v => v.trim());
+              } else if (outputValue != undefined) {
+                outputValue = String(outputValue).trim();
+              }
+            }
+            if (config?.replace) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v =>
+                  config.replace.reduce((prev, curr) => prev.replace(curr, ''), v)
+                );
+              } else {
+                outputValue = config.replace.reduce(
+                  (prev, curr) => prev.replace(curr, ''),
+                  String(outputValue)
+                );
+              }
+            }
+
+            // console.log('outputValue: ', outputValue, config, concatenatedValue);
+            outputObj[newKey] = outputValue;
+          });
         }
-        outputObj[outputKey] = outputValue;
+
+        // Add grouping fields
+        if (groupingSpec) {
+          const { field, spans } = groupingSpec;
+          const fieldValue = outputObj[field];
+          spans?.forEach(([start, end], i) => {
+            const key = `${field}_${start}_${end}`;
+            outputObj[key] = fieldValue?.substring(start, end) || undefined;
+          });
+        }
+
+        // Add array keys
+        if (arrayKeySpecs) {
+          arrayKeySpecs?.forEach(spec => {
+            outputObj[spec.key] = spec.repeatValue;
+          });
+        }
+
+        // Merge keys
+        if (mergeKeys) {
+          mergeKeys?.forEach(key => {
+            const valuesToMerge = Object.keys(outputObj)
+              .filter(k => k.startsWith(key))
+              .map(k => outputObj[k])
+              .filter(v => v !== undefined);
+            outputObj[key] = valuesToMerge.join('_');
+          });
+        }
+
+        return outputObj;
       });
 
-      // Concatenate keys
-      if (concatenateKeys) {
-        concatenateKeys?.forEach(concatenateKey => {
-          const { newKey, keysToConcatenate, delimiter } = concatenateKey;
-          const valuesToConcatenate = keysToConcatenate.map(k => outputObj[k]).filter(v => v !== undefined);
-          const concatenatedValue = valuesToConcatenate.join(delimiter);
-          outputObj[newKey] = concatenatedValue;
+    // Rename output fields to match model and filter out any extra keys
+    if (outputModel) {
+      return outputArray?.map(outputObj => {
+        const renamedOutputObj = {};
+        Object.entries(outputObj).forEach(([outputKey, outputValue]) => {
+          const inputKey = Object.keys(outputModel).find(k => outputModel[k] === outputKey);
+          if (inputKey) {
+            renamedOutputObj[inputKey] = outputValue;
+          }
         });
-      }
-
-      // Add grouping fields
-      if (groupingSpec) {
-        const { field, spans } = groupingSpec;
-        const fieldValue = outputObj[field];
-        spans?.forEach(([start, end], i) => {
-          const key = `${field}_${start}_${end}`;
-          outputObj[key] = fieldValue?.substring(start, end) || undefined;
-        });
-      }
-
-      // Add array keys
-      if (arrayKeySpecs) {
-        arrayKeySpecs?.forEach(spec => {
-          outputObj[spec.key] = spec.repeatValue;
-        });
-      }
-
-      // Merge keys
-      if (mergeKeys) {
-        mergeKeys?.forEach(key => {
-          const valuesToMerge = Object.keys(outputObj)
-            .filter(k => k.startsWith(key))
-            .map(k => outputObj[k])
-            .filter(v => v !== undefined);
-          outputObj[key] = valuesToMerge.join('_');
-        });
-      }
-
-      return outputObj;
-    });
-
-  // Rename output fields to match model and filter out any extra keys
-  return outputArray?.map(outputObj => {
-    const renamedOutputObj = {};
-    Object.entries(outputObj).forEach(([outputKey, outputValue]) => {
-      const inputKey = Object.keys(outputModel).find(k => outputModel[k] === outputKey);
-      if (inputKey) {
-        renamedOutputObj[inputKey] = outputValue;
-      }
-    });
-    return renamedOutputObj;
-  });
+        return renamedOutputObj;
+      });
+    } else {
+      return outputArray;
+    }
+  } catch (error) {
+    throw new Error(`Failed to transform the data array. Error: ${error}`);
+  }
 }
+
 //Join to get only matching data
 function innerJoin(arr1, arr2, key1, key2) {
   // Create an array to store the joined results
@@ -300,7 +363,7 @@ function deleteOLRDetailsFromOLRDatabyRequestId(fabyy_id) {
 async function insertDataintoOLRTable(data, fabyy_id) {
   // Check that the input parameters are valid
   if (!data || !Array.isArray(data) || !data.length || !fabyy_id) {
-    throw new Error(`data insert failed no matching data was found with filters (check for data in excel and for filters. ex: size template to olr size) or the insert function input parameters are not in correct format.`);
+    throw new Error(`data insert failed, no matching data was found with filters (check for data in excel and for filters. ex: size template to olr size) or the insert function input parameters are not in correct format.`);
   }
 
   // Connect to the database

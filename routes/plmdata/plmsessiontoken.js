@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
     return token;
   } catch (error) {
     // send a 500 error response if there's an error and return null
-    res.status(500).json({ error: error.message });
+    res.status(200).json({ error: error.message });
     return;
   }
 };

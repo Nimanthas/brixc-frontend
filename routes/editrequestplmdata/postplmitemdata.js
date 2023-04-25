@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
     await Promise.all(promises);
     return res.status(200).json({ Type: 'SUCCESS', Msg: 'item list successfully added.' });
   } catch (error) {
-    return res.status(500).json({ Type: 'ERROR', Msg: error.message });
+    return res.status(200).json({ Type: 'ERROR', Msg: error.message });
   }
 };
 

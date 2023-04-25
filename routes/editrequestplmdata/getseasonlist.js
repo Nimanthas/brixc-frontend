@@ -40,6 +40,6 @@ module.exports = async (req, res) => {
         res.status(200).json({ Type: 'SUCCESS', Data: seasonlist });
     } catch (error) {
         // Send an error response if an error occurs
-        res.status(500).json({ Type: 'ERROR', Msg: error.message, Data: [] });
+        res.status(200).json({ Type: 'ERROR', Msg: error.message, Data: [] });
     }
 };

@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
     } catch (error) {
       // If an error occurs, roll back the transaction and throw the error
       await client.query('ROLLBACK');
-      res.status(500).json({ Type: 'ERROR', Msg: error.message });
+      res.status(200).json({ Type: 'ERROR', Msg: error.message });
     } finally {
       // Release the database connection
       client.release();
@@ -67,7 +67,7 @@ module.exports = async (req, res) => {
   } catch (error) {
     // If an error occurs, log it and send an error response
     //console.error(err);
-    res.status(500).json({ Type: 'ERROR', Msg: error.message });
+    res.status(200).json({ Type: 'ERROR', Msg: error.message });
   }
 };
 

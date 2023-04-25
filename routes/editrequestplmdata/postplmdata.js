@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
     }
   } catch (error) {
     //console.log('Error in post plm data:', error);
-    return res.status(500).json({ Type: "ERROR", Msg: String(error) });
+    return res.status(200).json({ Type: "ERROR", Msg: String(error) });
   }
 };
 
@@ -132,112 +132,171 @@ async function getplmbomitems(req, res, itemlistids, plmToken, config) {
   }
 };
 //Transform excel json output into standard pre-defined json
-function transformArray(inputArray, config, filterValue) {
-  const { outputModel, fieldMappings, groupingSpec, arrayKeySpecs, mergeKeys, filterKey, mandatoryKeys, concatenateKeys } = config;
+function transformArray(inputArray, config) {
+  try {
+    const { outputModel, fieldMappings, groupingSpec, arrayKeySpecs, mergeKeys, filterKey, mandatoryKeys, concatenateKeys } = config;
 
-  // Validate that all mandatory keys are present in the input objects
-  if (mandatoryKeys != undefined && mandatoryKeys != null && mandatoryKeys.length > 0) {
-    const missingKeys = mandatoryKeys.filter(key => !inputArray.some(obj => obj.hasOwnProperty(key)));
-    if (missingKeys.length > 0) {
-      throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
+    // Validate that all mandatory keys are present in the input objects
+    if (mandatoryKeys != undefined && mandatoryKeys != null && mandatoryKeys.length > 0) {
+      const missingKeys = mandatoryKeys.filter(key => !inputArray.some(obj => obj.hasOwnProperty(key)));
+      if (missingKeys.length > 0) {
+        throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
+      }
+    } else {
+      throw new Error(`Mandatory columns are not defined for this customer.`);
     }
-  } else {
-    throw new Error(`Mandatory columns are not defined for this customer.`);
-  }
 
-  //Transform filter value
-  filterValue = filterValue?.toLowerCase().trim();
-
-  const outputArray = inputArray
-    .filter(inputObj => inputObj[filterKey]?.toLowerCase().trim() === filterValue)
-    .map(inputObj => {
-      // Rename fields
-      const outputObj = {};
-      Object.entries(inputObj).forEach(([inputKey, inputValue]) => {
-        const mapping = fieldMappings?.find(m => m.inputKey === inputKey);
-        const outputKey = mapping ? mapping.outputKey : inputKey;
-        const config = mapping ? mapping.config : undefined;
-        let outputValue = inputValue;
-        if (config) {
-          if (config.split && inputValue != undefined) {
-            outputValue = String(inputValue).split(config.split);
-          }
-          if (config.trim) {
-            if (Array.isArray(outputValue)) {
-              outputValue = outputValue.map(v => v.trim());
-            } else if (outputValue != undefined) {
-              outputValue = String(outputValue).trim();
+    const outputArray = inputArray
+      .map(inputObj => {
+        // Rename fields
+        const outputObj = {};
+        Object.entries(inputObj).forEach(async ([inputKey, inputValue]) => {
+          const mapping = fieldMappings?.find(m => m.inputKey === inputKey);
+          const outputKey = mapping ? mapping.outputKey : inputKey;
+          const config = mapping ? mapping.config : undefined;
+          let outputValue = inputValue;
+          if (config) {
+            if (config?.split && inputValue != undefined) {
+              outputValue = String(inputValue).split(config.split);
+            }
+            if (config?.sub && inputValue != undefined) {
+              let textprocesser = String(inputValue);
+              let len = textprocesser.length;
+              if (config?.sub?.option == 'init') {
+                outputValue = textprocesser.substring(config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'last') {
+                outputValue = textprocesser.substring(len - config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'mid') {
+                outputValue = textprocesser.substring(config?.sub?.startnumber, config?.sub?.start + config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'find') {
+                let position = word.indexOf(config?.sub?.findchar);
+                outputValue = position > 0 ? textprocesser.substring(position, position + config?.sub?.numberofletters) : '';
+              }
+            }
+            if (config?.trim) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v => v.trim());
+              } else if (outputValue != undefined) {
+                outputValue = String(outputValue).trim();
+              }
+            }
+            if (config?.replace) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v =>
+                  config.replace.reduce((prev, curr) => prev.replace(curr, ''), v)
+                );
+              } else {
+                outputValue = config.replace.reduce(
+                  (prev, curr) => prev.replace(curr, ''),
+                  String(outputValue)
+                );
+              }
             }
           }
-          if (config.replace) {
-            if (Array.isArray(outputValue)) {
-              outputValue = outputValue.map(v =>
-                config.replace.reduce((prev, curr) => prev.replace(curr, ''), v)
-              );
-            } else {
-              outputValue = config.replace.reduce(
-                (prev, curr) => prev.replace(curr, ''),
-                String(outputValue)
-              );
+          outputObj[outputKey] = outputValue;
+        });
+
+        // Concatenate keys
+        if (concatenateKeys) {
+          concatenateKeys?.forEach(async concatenateKey => {
+            const { newKey, keysToConcatenate, delimiter, config } = concatenateKey;
+            const valuesToConcatenate = keysToConcatenate.map(k => outputObj[k]).filter(v => v !== undefined);
+            const concatenatedValue = valuesToConcatenate.join(delimiter);
+            let outputValue = concatenatedValue;
+            if (config?.split && concatenatedValue != undefined) {
+              outputValue = String(concatenatedValue).split(config.split);
             }
-          }
+            if (config?.sub && concatenatedValue != undefined) {
+              let textprocesser = String(concatenatedValue);
+              let len = textprocesser.length;
+              if (config?.sub?.option == 'init') {
+                outputValue = textprocesser.substring(config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'last') {
+                outputValue = textprocesser.substring(len - config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'mid') {
+                outputValue = textprocesser.substring(config?.sub?.startnumber, config?.sub?.start + config?.sub?.numberofletters);
+              } else if (config?.sub?.option == 'find') {
+                let position = word.indexOf(config?.sub?.findchar);
+                outputValue = position > 0 ? textprocesser.substring(position, position + config?.sub?.numberofletters) : '';
+              }
+            }
+            if (config?.trim) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v => v.trim());
+              } else if (outputValue != undefined) {
+                outputValue = String(outputValue).trim();
+              }
+            }
+            if (config?.replace) {
+              if (Array.isArray(outputValue)) {
+                outputValue = outputValue.map(v =>
+                  config.replace.reduce((prev, curr) => prev.replace(curr, ''), v)
+                );
+              } else {
+                outputValue = config.replace.reduce(
+                  (prev, curr) => prev.replace(curr, ''),
+                  String(outputValue)
+                );
+              }
+            }
+
+            // console.log('outputValue: ', outputValue, config, concatenatedValue);
+            outputObj[newKey] = outputValue;
+          });
         }
-        outputObj[outputKey] = outputValue;
+
+        // Add grouping fields
+        if (groupingSpec) {
+          const { field, spans } = groupingSpec;
+          const fieldValue = outputObj[field];
+          spans?.forEach(([start, end], i) => {
+            const key = `${field}_${start}_${end}`;
+            outputObj[key] = fieldValue?.substring(start, end) || undefined;
+          });
+        }
+
+        // Add array keys
+        if (arrayKeySpecs) {
+          arrayKeySpecs?.forEach(spec => {
+            outputObj[spec.key] = spec.repeatValue;
+          });
+        }
+
+        // Merge keys
+        if (mergeKeys) {
+          mergeKeys?.forEach(key => {
+            const valuesToMerge = Object.keys(outputObj)
+              .filter(k => k.startsWith(key))
+              .map(k => outputObj[k])
+              .filter(v => v !== undefined);
+            outputObj[key] = valuesToMerge.join('_');
+          });
+        }
+
+        return outputObj;
       });
 
-      // Concatenate keys
-      if (concatenateKeys) {
-        concatenateKeys?.forEach(concatenateKey => {
-          const { newKey, keysToConcatenate, delimiter } = concatenateKey;
-          const valuesToConcatenate = keysToConcatenate.map(k => outputObj[k]).filter(v => v !== undefined);
-          const concatenatedValue = valuesToConcatenate.join(delimiter);
-          outputObj[newKey] = concatenatedValue;
+    // Rename output fields to match model and filter out any extra keys
+    //console.log('outputArray: ', outputArray);
+    if (outputModel) {
+      return outputArray?.map(outputObj => {
+        const renamedOutputObj = {};
+        Object.entries(outputObj).forEach(([outputKey, outputValue]) => {
+          const inputKey = Object.keys(outputModel).find(k => outputModel[k] === outputKey);
+          if (inputKey) {
+            renamedOutputObj[inputKey] = outputValue;
+          }
         });
-      }
-
-      // Add grouping fields
-      if (groupingSpec) {
-        const { field, spans } = groupingSpec;
-        const fieldValue = outputObj[field];
-        spans?.forEach(([start, end], i) => {
-          const key = `${field}_${start}_${end}`;
-          outputObj[key] = fieldValue?.substring(start, end) || undefined;
-        });
-      }
-
-      // Add array keys
-      if (arrayKeySpecs) {
-        arrayKeySpecs?.forEach(spec => {
-          outputObj[spec.key] = spec.repeatValue;
-        });
-      }
-
-      // Merge keys
-      if (mergeKeys) {
-        mergeKeys?.forEach(key => {
-          const valuesToMerge = Object.keys(outputObj)
-            .filter(k => k.startsWith(key))
-            .map(k => outputObj[k])
-            .filter(v => v !== undefined);
-          outputObj[key] = valuesToMerge.join('_');
-        });
-      }
-
-      return outputObj;
-    });
-
-  // Rename output fields to match model and filter out any extra keys
-  return outputArray?.map(outputObj => {
-    const renamedOutputObj = {};
-    Object.entries(outputObj).forEach(([outputKey, outputValue]) => {
-      const inputKey = Object.keys(outputModel).find(k => outputModel[k] === outputKey);
-      if (inputKey) {
-        renamedOutputObj[inputKey] = outputValue;
-      }
-    });
-    return renamedOutputObj;
-  });
+        return renamedOutputObj;
+      });
+    } else {
+      return outputArray;
+    }
+  } catch (error) {
+    throw new Error(`Failed to transform the data array. Error: ${error}`);
+  }
 }
+
 //get item name by item code
 async function getitemname(val_item, plmToken, plmSkipValue) {
   try {
@@ -319,10 +378,13 @@ async function updateplmcolordata(req, res, colorset, config) {
       const insertPromises = colorset.map(async (obj_color) => {
         // Map the color name to a new name using the dye roots
         const colorname_new = await dyerootmap(obj_color?.name, dyeRoots);
+        //Set and transform data array
+        const plmColors = [{ fabyy_id: fabric_yyid, plm_cw_id: obj_color.id, cw_name: colorname_new.replace(/'/g, "''"), cw_desc: obj_color?.name.replace(/'/g, "''"), colorway: obj_color?.colorway.replace(/'/g, "''"), garmentway: obj_color?.garmentway.replace(/'/g, "''"), cw_order: obj_color.seq, plm_color: colorname_new.replace(/'/g, "''") }];
+        const transformedPLMColors = transformArray(plmColors, config)[0];
 
         // Construct the SQL query for adding the PLM colorway to the database
-        const sqlqry_insert = `INSERT INTO plm_colorways(fabyy_id, plm_cw_id, cw_name, cw_desc, colorway, garmentway, cw_order) 
-                              VALUES ('${fabric_yyid}', '${obj_color.id}', '${colorname_new.replace(/'/g, "''")}', '${obj_color?.name.replace(/'/g, "''")}', '${obj_color?.colorway.replace(/'/g, "''")}', '${obj_color?.garmentway.replace(/'/g, "''")}', '${obj_color.seq}')`;
+        const sqlqry_insert = `INSERT INTO plm_colorways(fabyy_id, plm_cw_id, cw_name, cw_desc, colorway, garmentway, cw_order, computecolordesc) 
+                              VALUES ('${transformedPLMColors?.fabyy_id}', '${transformedPLMColors?.plm_cw_id}', '${transformedPLMColors?.cw_name}', '${transformedPLMColors?.cw_desc}', '${transformedPLMColors?.colorway}', '${transformedPLMColors?.garmentway}', '${transformedPLMColors?.cw_order}', '${transformedPLMColors?.computecolordesc_color}')`;
 
         // Execute the SQL query and return the result promise
         return client.query(sqlqry_insert);
@@ -345,7 +407,7 @@ async function updateplmcolordata(req, res, colorset, config) {
   } catch (error) {
     // If an error occurs, log it and send an error response
     //console.error(err);
-    throw new Error(`Failed to update plm color data. Error: ${error}`);
+    throw new Error(`Failed to update plm color data. ${error}`);
   }
 };
 // Map a color name to a new name using the dye roots
@@ -371,6 +433,7 @@ async function postplmitemdata(req, res, itemset, plmToken, config) {
     //console.log('plm fabric items: ', itemset);
 
     const promises = itemset?.map(async (obj_itemset) => {
+      //console.log('bom item: ', obj_itemset);
       const { color_way_colors, ...rest } = obj_itemset;
       const sanitizedRest = Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, sanitizeString(v)]));
       let inc_val = 0;
@@ -382,12 +445,16 @@ async function postplmitemdata(req, res, itemset, plmToken, config) {
       const colorwayPromises = color_way_colors?.map(async (color) => {
         const nameofmatcolor = await getcolorname(color, plmSkipValue, letterNumber, plmToken, plmweburl);
         const sanitizedColor = sanitizeString(nameofmatcolor.node_name);
+
         //console.log("sanitizedColor: ",sanitizedColor);
         if (sanitizedColor && !sanitizedColor.match(letterNumber)) {
           const { item_name, placement, description, color_way_type, supplier, material_type, cuttable_width } = sanitizedRest;
           inc_val += 1;
-          const sqlqry_insert = `INSERT INTO plm_items(fabyy_id, plm_item_id, plm_actual, plm_item_name, plm_item_desc, plm_colorway_type, plm_supplier, plm_fab_type, plm_cw, plm_placement, plm_color, gmt_color_order)
-            VALUES ('${fabric_yyid}', '${obj_itemset.id}', '${obj_itemset.actual}', '${sanitizeString(item_name)}', '${sanitizeString(description)}', '${sanitizeString(color_way_type)}', '${sanitizeString(supplier)}', '${sanitizeString(material_type)}', '${sanitizeString(cuttable_width)}', '${sanitizeString(placement)}', '${sanitizedColor}', '${inc_val}');`;
+          const plmItems = [{ fabyy_id: fabric_yyid, plm_item_id: obj_itemset.id, plm_actual: obj_itemset.actual, plm_item_name: sanitizeString(item_name), plm_item_desc: sanitizeString(description), plm_colorway_type: sanitizeString(color_way_type), plm_supplier: sanitizeString(supplier), plm_fab_type: sanitizeString(material_type), plm_cw: sanitizeString(cuttable_width), plm_placement: sanitizeString(placement), plm_color: sanitizedColor, gmt_color_order: inc_val }];
+          const transformedPLMItems = transformArray(plmItems, config)[0];
+          //console.log("transformedPLMItems: ", transformedPLMItems);
+          const sqlqry_insert = `INSERT INTO plm_items(fabyy_id, plm_item_id, plm_actual, plm_item_name, plm_item_desc, plm_colorway_type, plm_supplier, plm_fab_type, plm_cw, plm_placement, plm_color, gmt_color_order, computecolordesc)
+            VALUES ('${transformedPLMItems?.fabyy_id}', '${transformedPLMItems?.plm_item_id}', '${transformedPLMItems?.plm_actual}', '${transformedPLMItems?.plm_item_name}', '${transformedPLMItems?.plm_item_desc}', '${transformedPLMItems?.plm_colorway_type}', '${transformedPLMItems?.plm_supplier}', '${transformedPLMItems?.plm_fab_type}', '${transformedPLMItems?.plm_cw}', '${transformedPLMItems?.plm_placement}', '${transformedPLMItems?.plm_color}', '${transformedPLMItems?.gmt_color_order}', '${transformedPLMItems?.computecolordesc_item}');`;
           await pool.query(sqlqry_insert);
         }
       });

@@ -9,6 +9,7 @@ const postplmitemdata = require('./postplmitemdata');
 const postplmyydata = require('./postplmyydata');
 const postplmdata = require('./postplmdata');
 const plmseasonname = require('./plmseasonname');
+const postprocessplmlines = require('./postprocessplmlines');
 
 routes.post('/plmapperalboms', getapperalboms);
 routes.post('/plmrevisedbomdata', getreviseplmbomdata);
@@ -19,6 +20,7 @@ routes.post('/postplmitemdata', postplmitemdata);
 routes.post('/postplmyydata', postplmyydata);
 routes.post('/postplmdata', postplmdata);
 routes.post('/plmseasonname', plmseasonname);
+routes.post('/postprocessplmlines/:fabyyid', postprocessplmlines);
 
 
 module.exports = routes;

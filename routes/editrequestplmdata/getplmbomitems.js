@@ -2,6 +2,7 @@ const axios = require('axios');
 const configData = require('../../common/config.list');
 const plmweburl = require('../plmurl').apiurl;
 const plmSessionApi = require('./plmsessiontoken');
+const requestDetails = require('../common/getrequestdetails');
 
 module.exports = async (req, res) => {
     try {
@@ -10,8 +11,10 @@ module.exports = async (req, res) => {
 
         const plmToken = await plmSessionApi(req, res);
 
+        //get request details by id
+        let request = await requestDetails(req, res, fabyyid);
         // Filter config data based on customer ID
-        const filteredConfig = configData.filter(config => config.cus_id === 1);
+        const filteredConfig = configData.filter(config => config.cus_id === request?.cus_id);
         if (filteredConfig?.length === 0) {
             throw new Error("Oops! can't find correct dataset to post upload olr data.");
         }

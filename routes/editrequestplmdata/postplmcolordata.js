@@ -2,6 +2,7 @@
 const { pool } = require('../dbconfig');
 const moment = require('moment');
 const configData = require('../../common/config.list');
+const requestDetails = require('../common/getrequestdetails');
 
 // Define the handler function for adding PLM colors
 module.exports = async (req, res) => {
@@ -14,8 +15,10 @@ module.exports = async (req, res) => {
       throw new Error("Oops! invalid input data set.");
     }
 
+    //get request details by id
+    let request = await requestDetails(req, res, fabyyid);
     // Filter config data based on customer ID
-    const filteredConfig = configData.filter(config => config.cus_id === 1);
+    const filteredConfig = configData.filter(config => config.cus_id === request?.cus_id);
 
     // Check if the filtered config data is empty
     if (!filteredConfig?.length) {

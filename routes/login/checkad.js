@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
 
     // Validate request body
     if (!username || !password || Object.keys(req.body).length !== 2) {
-      return res.status(400).json({ error: 'Opss! invalid request data' });
+      return res.status(200).json({ error: 'Opss! invalid request data' });
     }
 
     const ad = new ActiveDirectory({ ...config, username: username.toLowerCase(), password });

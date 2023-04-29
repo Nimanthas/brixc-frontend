@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     } catch (error) {
         console.log("error in getfabricyyrequestdetails: ", error);
         // Handle errors by sending error response with error message
-        res.status(400).json({ Type: "ERROR", Msg: error.message });
+        res.status(200).json({ Type: "ERROR", Msg: error.message });
     } finally {
         // Send successful response with result rows
         res.status(200).json({ Type: "SUCCESS", Data: results.rows });

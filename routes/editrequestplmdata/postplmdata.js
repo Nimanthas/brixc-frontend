@@ -5,6 +5,7 @@ const plmweburl = require('../plmurl').apiurl;
 const plmSessionNameApi = require('./plmseasonname');
 const plmSessionApi = require('./plmsessiontoken');
 const axios = require('axios');
+const requestDetails = require('../common/getrequestdetails');
 
 module.exports = async (req, res) => {
   try {
@@ -19,8 +20,12 @@ module.exports = async (req, res) => {
     const plmToken = await plmSessionApi(req, res);
     //console.log('plm Token: ', plmToken);
 
+    // Extract the "fabyyid" property from the HTTP request body
+    const { fabric_yyid } = req.body;
+    //get request details by id
+    let request = await requestDetails(req, res, fabric_yyid);
     // Filter config data based on customer ID
-    const filteredConfig = configData.filter(config => config.cus_id === 1);
+    const filteredConfig = configData.filter(config => config.cus_id === request?.cus_id);
     if (!filteredConfig?.length) {
       throw new Error("Oops! can't find correct dataset to post upload olr data.");
     }

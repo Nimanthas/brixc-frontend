@@ -3,19 +3,23 @@ const axios = require('axios');
 const plmweburl = require('../plmurl').apiurl;
 const plmSessionApi = require('./plmsessiontoken');
 const configData = require('../../common/config.list');
+const requestDetails = require('../common/getrequestdetails');
 
 module.exports = async (req, res) => {
   try {
     const { fabric_yyid, itemset, isAmendmant } = req.body;
     const plmToken = await plmSessionApi(req, res);
-    const filteredConfig = configData.filter(config => config.cus_id === 1);
+    //get request details by id
+    let request = await requestDetails(req, res, fabyyid);
+    // Filter config data based on customer ID
+    const filteredConfig = configData.filter(config => config.cus_id === request?.cus_id);
     if (filteredConfig?.length === 0) {
       throw new Error("Oops! can't find correct dataset to post upload olr data.");
     }
     const config = filteredConfig[0]?.plmValidations;
     const { plmSkipValue, letterNumber } = config;
-    if (!Object.keys(req.body).length) { return res.status(400).json({ Type: 'ERROR', Msg: 'Oops! empty data set in request header.' }); }
-    if (Object.keys(req.body).length < 3) { return res.status(400).json({ Type: 'ERROR', Msg: "Oops! can't find correct dataset input in request header." }); }
+    if (!Object.keys(req.body).length) { return res.status(200).json({ Type: 'ERROR', Msg: 'Oops! empty data set in request header.' }); }
+    if (Object.keys(req.body).length < 3) { return res.status(200).json({ Type: 'ERROR', Msg: "Oops! can't find correct dataset input in request header." }); }
     const promises = itemset.map(async (obj_itemset) => {
       const { color_way_colors, ...rest } = obj_itemset;
       const sanitizedRest = Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, sanitizeString(v)]));

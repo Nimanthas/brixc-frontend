@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
   try {
     // Check if the file parameter is missing from the request
     if (!files?.file) {
-      return res.status(400).json({ Type: "SUCCESS", Msg: 'Oops! no file was uploaded.' });
+      return res.status(200).json({ Type: "SUCCESS", Msg: 'Oops! no file was uploaded.' });
     }
     // Filter config data based on customer ID
     const filteredConfig = configData.filter(config => config.cus_id === 1);
@@ -34,25 +34,25 @@ module.exports = async (req, res) => {
     const sheet = workbook?.Sheets[config.sheetName];
     // Check if no matching sheet was found
     if (!sheet) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! no sheet found with name ${config.sheetName}.` });
+      return res.status(200).json({ Type: "ERROR", Msg: `Oops! no sheet found with name ${config.sheetName}.` });
     }
     // Convert the sheet data to a JSON array
     const data = XLSX.utils.sheet_to_json(sheet);
     // Check if the sheet data is empty
     if (!data?.length) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! no data found in sheet with name ${config.sheetName}.` });
+      return res.status(200).json({ Type: "ERROR", Msg: `Oops! no data found in sheet with name ${config.sheetName}.` });
     }
     // Retrieve request data related to the specified ID
     const requestData = await getFabricYYRequestDetailsbyRequestId(fabyyid);
     // Check if no matching request data was found
     if (!requestData?.length) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! unable to get the details related to request : ${fabyyid}. The request may be dropped or declared invalid.` });
+      return res.status(200).json({ Type: "ERROR", Msg: `Oops! unable to get the details related to request : ${fabyyid}. The request may be dropped or declared invalid.` });
     }
     // Transform the sheet data using the specified config and request data
     const transformedData = await transformArray(data, config, requestData[0].cus_sty_no);
     // Check if the transformed data is empty
     if (!transformedData?.length) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! no data found in olr sheet related to style: ${requestData[0].cus_sty_no}. This can be caused by incorrect file format or the style details is not found.` });
+      return res.status(200).json({ Type: "ERROR", Msg: `Oops! no data found in olr sheet related to style: ${requestData[0].cus_sty_no}. This can be caused by incorrect file format or the style details is not found.` });
     }
     // Delete existing OLR data related to the specified request ID
     await deleteOLRDetailsFromOLRDatabyRequestId(fabyyid);
@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
       const sizeTemplateData = await getSizeNamesbyTemplateId(sizetempid);
       // Check if no matching size template data was found
       if (!sizeTemplateData?.length) {
-        return res.status(400).json({ Type: "ERROR", Msg: `Oops! no data found for size template id: ${sizetempid}.` });
+        return res.status(200).json({ Type: "ERROR", Msg: `Oops! no data found for size template id: ${sizetempid}.` });
       }
       //Join data
       joinedData = innerJoin(transformedData, sizeTemplateData, config.joinParameters.data01Key, config.joinParameters.data02Key);
@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({ Type: "SUCCESS", Msg: "olr list added successfully !", data: joinedData, fabyyid });
   } catch (error) {
     //Return error
-    return res.status(400).json({ Type: "ERROR", Msg: String(error) });
+    return res.status(200).json({ Type: "ERROR", Msg: String(error) });
   }
 };
 

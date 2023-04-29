@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
     const bomlist = await getApprovedBomList(apiurl, enc_styleseasonid, plmToken);
 
     if (!bomlist) {
-        res.status(400).json({ Type: 'Error', Msg: 'Opss! there is no approved BOMSs found.' });
+        res.status(200).json({ Type: 'Error', Msg: 'Opss! there is no approved BOMSs found.' });
     }
 
     // Send a JSON response with the list of approved BOMs
@@ -63,7 +63,7 @@ async function getIsApproved(val_item, apiurl, plmToken) {
             return { state: bomstatus.data.state };
         } catch (error) {
             // Log any errors and return an object with an empty state
-            return res.status(400).json({ Type: "ERROR", Msg: error.message });
+            return res.status(200).json({ Type: "ERROR", Msg: error.message });
         }
     } else {
         // Return an object with an empty state if the latest revision is invalid

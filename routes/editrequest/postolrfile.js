@@ -8,6 +8,7 @@ const { pool } = require('../dbconfig');
 const moment = require('moment');
 const XLSX = require('xlsx');
 const configData = require('../../common/config.list');
+const requestDetails = require('../common/getrequestdetails');
 
 // Export an asynchronous function that takes request and response objects as arguments
 module.exports = async (req, res) => {
@@ -18,42 +19,32 @@ module.exports = async (req, res) => {
   try {
     // Check if the file parameter is missing from the request
     if (!files?.file) {
-      return res.status(400).json({ Type: "ERROR", Msg: 'Oops! no files were found in request inputs.' });
+      throw new Error('Oops! no files were found in request inputs.');
     }
+    //get request details by id
+    let request = await requestDetails(req, res, fabyyid);
     // Filter config data based on customer ID
-    const filteredConfig = configData.filter(config => config.cus_id === 1);
+    const filteredConfig = configData.filter(config => config.cus_id === request?.cus_id);
     // Check if no matching config data was found
     if (!filteredConfig?.length) {
-      return res.status(200).json({ Type: "ERROR", Msg: "Oops! can't find correct dataset to post upload olr data." });
+      throw new Error(`Oops! can't find correct dataset to post upload olr data.`);
     }
     // Select the first matching config data
     const config = filteredConfig[0]?.olrValidations;
-    // Read the uploaded file as an XLSX workbook
-    const workbook = XLSX.read(files.file.data);
-    // Select the sheet with the specified name from the workbook
-    const sheet = workbook?.Sheets[config.sheetName];
-    // Check if no matching sheet was found
-    if (!sheet) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! no sheet found with name ${config.sheetName}.` });
-    }
-    // Convert the sheet data to a JSON array
-    const data = XLSX.utils.sheet_to_json(sheet);
-    // Check if the sheet data is empty
-    if (!data?.length) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! no data found in sheet with name ${config.sheetName}.` });
-    }
+    //read excel file and convert it into JSON object
+    const data = await readExcelToJson(files.file.data, config);
     // Retrieve request data related to the specified ID
     const requestData = await getFabricYYRequestDetailsbyRequestId(fabyyid);
     // Check if no matching request data was found
     if (!requestData?.length) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! unable to get the details related to request : ${fabyyid}. The request may be dropped or declared invalid.` });
+      throw new Error(`Oops! unable to get the details related to request : ${fabyyid}. The request may be dropped or declared invalid.`);
     }
     // Transform the sheet data using the specified config and request data
     const transformedData = await transformArray(data, config, requestData[0].cus_sty_no);
     //console.log("excel transformed data: ", transformedData);
     // Check if the transformed data is empty
     if (!transformedData?.length) {
-      return res.status(400).json({ Type: "ERROR", Msg: `Oops! no data found in olr sheet related to style: ${requestData[0].cus_sty_no}. This can be caused by incorrect file format or the style details is not found.` });
+      throw new Error(`Oops! no data found in olr sheet related to style: ${requestData[0].cus_sty_no}. This can be caused by incorrect file format or the style details is not found.`);
     }
     // Delete existing OLR data related to the specified request ID
     await deleteOLRDetailsFromOLRDatabyRequestId(fabyyid);
@@ -65,7 +56,7 @@ module.exports = async (req, res) => {
       const sizeTemplateData = await getSizeNamesbyTemplateId(sizetempid);
       // Check if no matching size template data was found
       if (!sizeTemplateData?.length) {
-        return res.status(400).json({ Type: "ERROR", Msg: `Oops! no data found for size template id: ${sizetempid}.` });
+        throw new Error(`Oops! no data found for size template id: ${sizetempid}.`);
       }
       //Join data
       joinedData = innerJoin(transformedData, sizeTemplateData, config.joinParameters.data01Key, config.joinParameters.data02Key);
@@ -85,20 +76,87 @@ module.exports = async (req, res) => {
     return res.status(200).json({ Type: "ERROR", Msg: String(error) });
   }
 };
+
+//Read excel from headers
+async function readExcelToJson(fileData, config) {
+  try {
+    // Destructuring config object and setting default value for mandatoryKeys
+    const { mandatoryKeys = [], sections, sheetName, headerKeys } = config;
+
+    // Reading workbook from fileData
+    const workbook = XLSX.read(fileData);
+
+    // Getting sheet with sheetName from workbook
+    const sheet = workbook?.Sheets[sheetName];
+
+    // If sheet with sheetName not found, throw error
+    if (!sheet) {
+      throw new Error(`No sheet found with name ${sheetName}`);
+    }
+
+    // Converting sheet to json data
+    const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    // If no data found in sheet, throw error
+    if (!data?.length) {
+      throw new Error(`No data found in sheet with name ${sheetName}`);
+    }
+
+    // Finding header row using headerKeys
+    let headerRow = -1;
+    for (const [index, row] of data.entries()) {
+      if (headerKeys.every(name => row.includes(name))) {
+        headerRow = index;
+        break;
+      }
+    }
+
+    // If header row not found, throw error
+    if (headerRow === -1) {
+      throw new Error('Header row not found');
+    }
+
+    // Getting header row data, section row data and data rows
+    const headerRowData = data[headerRow];
+    const sectionRow = headerRow <= 0 ? [] : data[headerRow - 1];
+    const dataRows = data.slice(headerRow + 1);
+
+    // Converting data rows to json object
+    const jsonData = [];
+    for (const row of dataRows) {
+      const obj = {};
+      let sectionName = '';
+      for (const [index, header] of headerRowData.entries()) {
+        // Concatenate section name and header name as key
+        if (sections) {
+          if ( sectionRow[index] != undefined && sectionRow[index] != '') { sectionName = sectionRow[index] };
+          //console.log('sectionRow[index]: , sectionName:, sections: ', sectionRow[index], sectionName, sections);
+          obj[sectionName + "::" + header] = row[index];
+        } else {
+          obj[header] = row[index];
+        }
+      }
+      jsonData.push(obj);
+    }
+    //console.log('jsonData: ', jsonData);
+
+    // Checking for missing mandatory keys and throwing error if any
+    const missingKeys = mandatoryKeys.filter(key => !jsonData.some(obj => obj.hasOwnProperty(key)));
+    if (missingKeys.length > 0) {
+      throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
+    }
+
+    // Returning json data
+    return jsonData;
+  } catch (error) {
+    // Throwing error with custom message
+    throw new Error(error.message);
+  }
+}
 //Transform excel json output into standard pre-defined json
 function transformArray(inputArray, config, filterValue) {
   try {
-    const { outputModel, fieldMappings, groupingSpec, arrayKeySpecs, mergeKeys, filterKey, mandatoryKeys, concatenateKeys } = config;
-
-    // Validate that all mandatory keys are present in the input objects
-    if (mandatoryKeys != undefined && mandatoryKeys != null && mandatoryKeys.length > 0) {
-      const missingKeys = mandatoryKeys.filter(key => !inputArray.some(obj => obj.hasOwnProperty(key)));
-      if (missingKeys.length > 0) {
-        throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
-      }
-    } else {
-      throw new Error(`Mandatory columns are not defined for this customer.`);
-    }
+    const { outputModel, fieldMappings, groupingSpec, arrayKeySpecs, mergeKeys, filterKey, concatenateKeys } = config;
 
     //Transform filter value
     filterValue = filterValue?.toLowerCase().trim();
@@ -253,7 +311,6 @@ function transformArray(inputArray, config, filterValue) {
     throw new Error(`Failed to transform the data array. Error: ${error}`);
   }
 }
-
 //Join to get only matching data
 function innerJoin(arr1, arr2, key1, key2) {
   // Create an array to store the joined results

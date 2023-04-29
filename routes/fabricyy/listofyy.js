@@ -36,6 +36,6 @@ module.exports = async (req, res) => {
     res.status(200).json({ Type: "SUCCESS", Data: rows });
   } catch (error) {
     // Handle errors
-    res.status(400).json({ Type: "ERROR", Msg: error.message });
+    res.status(200).json({ Type: "ERROR", Msg: error.message });
   }
 };

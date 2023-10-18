@@ -9,5 +9,9 @@ module.exports = {
   pg_pw: process.env.DB_PASSWORD || "P@ssw0rd",
   pg_host: process.env.DB_HOST || "localhost",
   pg_port: process.env.DB_PORT || "5432",
-  pg_db: process.env.DB_DATABASE || "fabricyy"
+  pg_db: process.env.DB_DATABASE || "brixc",
+  ZOOM_CLIENT_ID: '',
+  ZOOM_CLIENT_SECRET: '',
+  REDIRECT_URL:"http://localhost:3000/auth/zoom/callback",
+  SESSION_SECRET: ''
 };

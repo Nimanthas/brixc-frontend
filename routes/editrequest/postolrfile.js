@@ -7,8 +7,8 @@
 const { pool } = require('../dbconfig');
 const moment = require('moment');
 const XLSX = require('xlsx');
-const configData = require('../../common/config.list');
-const requestDetails = require('../common/getrequestdetails');
+const configData = [];
+const requestDetails = [];
 
 // Export an asynchronous function that takes request and response objects as arguments
 module.exports = async (req, res) => {
@@ -81,13 +81,16 @@ module.exports = async (req, res) => {
 async function readExcelToJson(fileData, config) {
   try {
     // Destructuring config object and setting default value for mandatoryKeys
-    const { mandatoryKeys = [], sections, sheetName, headerKeys } = config;
+    const { mandatoryKeys = [], sections, headerKeys, blankRows, sheetNumber } = config;
+    let { sheetName } = config;
 
     // Reading workbook from fileData
     const workbook = XLSX.read(fileData);
 
     // Getting sheet with sheetName from workbook
+    if(sheetName == 'number') { sheetName = workbook?.SheetNames[sheetNumber] }
     const sheet = workbook?.Sheets[sheetName];
+    //console.log('sheet: ', sheet);
 
     // If sheet with sheetName not found, throw error
     if (!sheet) {
@@ -95,7 +98,8 @@ async function readExcelToJson(fileData, config) {
     }
 
     // Converting sheet to json data
-    const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const data = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: blankRows });
+    //console.log('data[0]: ', data[0]);
 
     // If no data found in sheet, throw error
     if (!data?.length) {
@@ -146,6 +150,7 @@ async function readExcelToJson(fileData, config) {
       throw new Error(`The mandatory columns are missing in excel. Missing columns: ${missingKeys.join(', ')}`);
     }
 
+    //console.log('jsonData[0]: ', jsonData[0]);
     // Returning json data
     return jsonData;
   } catch (error) {
@@ -161,8 +166,10 @@ function transformArray(inputArray, config, filterValue) {
     //Transform filter value
     filterValue = filterValue?.toLowerCase().trim();
 
+    //console.log('inputArray[0]: ', inputArray[0]);
+    // Transform array with transformations
     const outputArray = inputArray
-      .filter(inputObj => inputObj[filterKey]?.toLowerCase().trim() === filterValue)
+      .filter(inputObj => String(inputObj[filterKey])?.toLowerCase().trim() === filterValue)
       .map(inputObj => {
         // Rename fields
         const outputObj = {};

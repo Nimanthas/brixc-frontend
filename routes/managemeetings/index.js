@@ -1,10 +1,8 @@
 //import routes
 const routes = require('express').Router();
 
-const createnewrequest = require('./createnewrequest');
-const postolrfile = require('./postolrfile');
+const createnewmeeting = require('./createnewmeeting');
 
-routes.post('/createnewrequest', createnewrequest);
-routes.post('/postolrfile/:fabyyid/:sizetempid', postolrfile);
+routes.post('/createnewmeeting', createnewmeeting);
 
 module.exports = routes;

@@ -17,6 +17,9 @@ const getmasterdepartments = require('./departments/getmasterdepartments');
 const managetags = require('./tags/managetags');
 const gettags = require('./tags/gettags');
 
+const managetokens = require('./tokenmanager/managetokens');
+const gettokens = require('./tokenmanager/getzoomtoken');
+
 
 //routes
 routes.post('/manageeventtypes', manageeventtypes);
@@ -33,5 +36,8 @@ routes.get('/getmasterdepartments/:department_id', getmasterdepartments);
 
 routes.post('/managetags', managetags);
 routes.get('/gettags/:tag_id', gettags);
+
+routes.post('/managetokens', managetokens);
+routes.get('/gettokens/:token_id', gettokens);
 
 module.exports = routes;

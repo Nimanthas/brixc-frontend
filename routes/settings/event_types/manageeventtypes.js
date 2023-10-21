@@ -34,8 +34,8 @@ module.exports = async (req, res) => {
 
     const { rows } = await pool.query(sqlqry, values);
 
-    res.status(200).json({ Type: 'SUCCESS', Msg: `New event type ${option}ed successfully!`, Data: rows });
+    res.status(200).json({ type: 'SUCCESS', message: `New event type ${option}ed successfully!`, data: rows });
   } catch (error) {
-    res.status(200).json({ Type: 'ERROR', Msg: error.message });
+    res.status(200).json({ type: 'ERROR', message: error.message });
   }
 };

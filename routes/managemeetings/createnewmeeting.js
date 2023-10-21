@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     const zoom_response = await axios.post(`${settings?.zoom_base_url}/users/me/meetings`, {}, {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        'Content-type': 'application/json',
       },
     });
 
@@ -25,9 +25,9 @@ module.exports = async (req, res) => {
       throw new Error('Failed to schedule the meeting in zoom.');
     }
 
-    res.status(200).json({ Type: 'SUCCESS', Msg: `Meeting scheduled successfully!`, Data: { 'meeting_id': zoom_response?.data?.id, 'join_url': zoom_response?.data?.join_url } });
+    res.status(200).json({ type: 'SUCCESS', message: `Meeting scheduled successfully!`, data: { 'meeting_id': zoom_response?.data?.id, 'join_url': zoom_response?.data?.join_url } });
 
   } catch (error) {
-    res.status(200).json({ Type: 'ERROR', Msg: error.message });
+    res.status(200).json({ type: 'ERROR', message: error.message });
   }
 };

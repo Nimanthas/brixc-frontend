@@ -775,7 +775,7 @@ module.exports = [
         data02Key: 'size_name', //Size template data
       },
       sections: true,
-      headerKeys: ['HW Style #', 'Description', 'Vendor Size', 'Quantity', 'Type', 'Vendor Style #'],
+      headerKeys: ['HW Style #', 'Description', 'Vendor Size', 'Quantity', 'type', 'Vendor Style #'],
       mandatoryKeys: ['Style::Vendor Style #', 'Style::HW Style #', 'Style::Description', 'Size::Vendor Size', 'Body Color::Description', 'Body Color::#', 'Size::Vendor Size', 'Price & Qtys::Quantity'],
       filterKey: 'Style::HW Style #',
       outputModel: {

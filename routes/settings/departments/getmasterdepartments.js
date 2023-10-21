@@ -19,9 +19,9 @@ module.exports = async (req, res) => {
     const { rows } = await pool.query(sqlqry);
 
     // Send successful response with result rows
-    res.status(200).json({ Type: "SUCCESS", Data: rows });
+    res.status(200).json({ type: "SUCCESS", data: rows });
   } catch (error) {
     // Handle errors by sending an error response with an error message
-    res.status(200).json({ Type: "ERROR", Msg: error.message });
+    res.status(200).json({ type: "ERROR", message: error.message });
   }
 };

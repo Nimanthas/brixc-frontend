@@ -12,4 +12,9 @@ module.exports = {
   pg_db: process.env.DB_DATABASE || "brixc",
   api_token_expireing_tolerance: 5,
   zoom_base_url: "https://api.zoom.us/v2",
+  integration_username: "brixcapi",
+  integration_password: "brixcapi",
+  token_refresh_timeout: process.env.TOKEN_REFRESH_TIMEOUT || '3d',
+  token_access_timeout: process.env.TOKEN_ACCESS_TIMEOUT || '60m',
+  token_issuer: process.env.TOKEN_ISSUER || 'brandix-digital-labdipchart-automation'
 };

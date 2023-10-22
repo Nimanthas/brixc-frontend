@@ -3,7 +3,7 @@ import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import { connect } from 'react-redux'; // Import connect from react-redux
 import { Row, Col } from 'reactstrap';
 import CrudTable from '../../../../../Components/Common/CrudTable';
-import { fetchTagData, addTag, editTag, deleteTag } from '../../../../../Store/Reducers/Data/DataManageOptions'; // Import Redux actions
+import { fetchTagData, addTag, editTag, deleteTag } from '../../../../../Store/Reducers/Data/DataManageOptions';
 
 const itemsPerPage = 5;
 
@@ -31,7 +31,7 @@ class JobTags extends React.Component {
     handleAdd = () => {
         // Dispatch the addTag action when the user adds a new item
         const newItem = {
-            id: this.props.tag_data.length + 1, // You might want to generate a unique ID
+            id: 0, 
             tag: 'New Tag', // Modify as needed
             status: true, // Modify as needed
         };

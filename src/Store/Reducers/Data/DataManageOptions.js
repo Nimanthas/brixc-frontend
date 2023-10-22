@@ -1,3 +1,5 @@
+const base_api_url = 'http://localhost:8280/';
+
 // Start: Actions
 // Start: Master 
 // Start: Manage Tags
@@ -8,9 +10,9 @@ export const DELETE_TAG = 'DELETE_TAG';
 
 export function fetchTagData() {
     return (dispatch) => {
-        fetch('/api/data')
+        fetch(`${base_api_url}settings/gettags/0`)
             .then((response) => response.json())
-            .then((data) => dispatch({ type: FETCH_TAG_DATA, payload: data }));
+            .then((data) => dispatch({ type: FETCH_TAG_DATA, payload: data?.data[0] }));
     };
 }
 

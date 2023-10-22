@@ -23,7 +23,8 @@ module.exports = async (token_id) => {
       // Calculate the difference in seconds
       const differenceInSeconds = expired_on.diff(current_time, 'seconds');
 
-      if (differenceInSeconds < 1) {
+      // Check for remaining time in token
+      if (differenceInSeconds < 5) {
         rows[0].token = await getzoomrefreshtoken(rows[0]?.token);
       }
     }

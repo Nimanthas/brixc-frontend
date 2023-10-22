@@ -14,14 +14,14 @@ module.exports = async (access_token) => {
     const authString = `Basic ${btoa(`${zoom_client_id}:${zoom_client_secret}`)}`;
 
     // Send a POST request to the Zoom API to revoke the previous access token
-    await axios.post('https://zoom.us/oauth/revoke', null, {
-      headers: {
-        'Authorization': authString,
-      },
-      params: {
-        token: access_token, 
-      },
-    });
+    // await axios.post('https://zoom.us/oauth/revoke', null, {
+    //   headers: {
+    //     'Authorization': authString,
+    //   },
+    //   params: {
+    //     token: access_token, 
+    //   },
+    // });
 
     // send a POST request to the PLM API to create a new session and extract the token from the response
     const { data: { access_token, token_type, expires_in, } } = await axios.post(`https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${zoom_account_id}`, null, {

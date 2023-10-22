@@ -3,6 +3,8 @@ const express = require("express");
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const app = express();
+
+// Import Routes
 const routes = require('./routes');
 const Settings = require("./settings");
 
@@ -18,7 +20,7 @@ app.use('/', routes);
 
 
 // Turn on that server!
-const PORT = Settings.port || 5001;
+const PORT = Settings.port || 8280;
 app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
+  console.log(`app listening on port ${PORT}`);
 });

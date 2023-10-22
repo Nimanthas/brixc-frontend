@@ -12,7 +12,7 @@ export function fetchTagData() {
     return (dispatch) => {
         fetch(`${base_api_url}settings/gettags/0`)
             .then((response) => response.json())
-            .then((data) => dispatch({ type: FETCH_TAG_DATA, payload: data?.data[0] }));
+            .then((data) => dispatch({ type: FETCH_TAG_DATA, payload: data.data[0] }));
     };
 }
 
@@ -24,7 +24,7 @@ export function editTag(item) {
     return { type: EDIT_TAG, payload: item };
 }
 
-export function deleteTag(id) {
+export function deleteTag(tag_id) {
     return { type: DELETE_TAG, payload: id };
 }
 // End: Manage Tags
@@ -49,16 +49,17 @@ export default function reducer(state = {
             return {
                 ...state,
                 data: state.data.map((item) =>
-                    item.id === action.payload.id ? action.payload : item
+                    item.id === action.payload.tag_id ? action.payload : item
                 ),
             };
         case DELETE_TAG:
             return {
                 ...state,
-                data: state.data.filter((item) => item.id !== action.payload),
+                data: state.data.filter((item) => item.tag_id !== action.payload),
             };
         default:
             return state;
     }
+    return state;
 }
 // End: Reducer

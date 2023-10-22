@@ -59,31 +59,31 @@ class UserBox extends React.Component {
                                                 Activity
                                             </NavItem>
                                             <NavItem>
-                                                <NavLink href="javascript:void(0);">
+                                                <NavLink>
                                                     Chat
                                                     <div className="ml-auto badge badge-pill badge-info">8</div>
                                                 </NavLink>
                                             </NavItem>
                                             <NavItem>
-                                                <NavLink href="javascript:void(0);">Recover Password</NavLink>
+                                                <NavLink>Recover Password</NavLink>
                                             </NavItem>
                                             <NavItem className="nav-item-header">
                                                 My Account
                                             </NavItem>
                                             <NavItem>
-                                                <NavLink href="javascript:void(0);">
+                                                <NavLink>
                                                     Settings
                                                     <div className="ml-auto badge badge-success">New</div>
                                                 </NavLink>
                                             </NavItem>
                                             <NavItem>
-                                                <NavLink href="javascript:void(0);">
+                                                <NavLink>
                                                     Messages
                                                     <div className="ml-auto badge badge-warning">512</div>
                                                 </NavLink>
                                             </NavItem>
                                             <NavItem>
-                                                <NavLink href="javascript:void(0);">
+                                                <NavLink>
                                                     Logs
                                                 </NavLink>
                                             </NavItem>

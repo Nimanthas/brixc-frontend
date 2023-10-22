@@ -75,8 +75,8 @@ class JobTags extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-    tag_data: state.tag_data, // Map the tag_data from Redux state to props
-    totalItems: state.tag_data.length, // Calculate total items
+    tag_data: state.DataReducer.tag_data, // Map the tag_data from Redux state to props
+    totalItems: state.DataReducer.tag_data.length, // Calculate total items
 });
 
 const mapDispatchToProps = { fetchTagData, addTag, editTag, deleteTag };

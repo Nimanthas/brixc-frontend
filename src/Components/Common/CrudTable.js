@@ -76,9 +76,9 @@ const CrudTable = ({ data, itemsPerPage, headers, onPageChange, totalItems, onEd
                                 <tr key={item.id}>
                                     {Object.keys(item).map((key) => (
                                         <td key={key} className="text-left">
-                                            {key === 'status' ? (
+                                            {key.includes('status') ? (
                                                 <div className="badge badge-warning">
-                                                    {item[key] ? 'Active' : 'Inactive'}
+                                                    {item[key]}
                                                 </div>
                                             ) : (
                                                 item[key]
@@ -86,12 +86,8 @@ const CrudTable = ({ data, itemsPerPage, headers, onPageChange, totalItems, onEd
                                         </td>
                                     ))}
                                     <td className="text-center">
-                                        <Button color="info" size="sm" onClick={() => onEdit(item.id)}>
-                                            Edit
-                                        </Button>
-                                        <Button color="danger" size="sm" onClick={() => onDelete(item.id)}>
-                                            Delete
-                                        </Button>
+                                        <Button color="info" size="sm" onClick={() => onEdit(item.id)}>Edit</Button>
+                                        <Button color="danger" size="sm" onClick={() => onDelete(item.id)}>Delete</Button>
                                     </td>
                                 </tr>
                             ))}

@@ -1,9 +1,9 @@
 {
-  "name": "dcap-report-portal",
+  "name": "brixc",
   "version": "1.0.0",
   "private": true,
-  "description": "DCAP Report Portal - designed on demand",
-  "author": "Nimantha Hennayake",
+  "description": "BrixC",
+  "author": "Inukshi Senarathne",
   "homepage": "",
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.15",

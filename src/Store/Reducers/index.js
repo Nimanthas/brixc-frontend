@@ -1,11 +1,11 @@
 import { combineReducers } from 'redux';
 import { reducer as ReduxFormReducer } from 'redux-form';
 
-import FactoryReducer from './FilterData/FactoryData';
+import DataReducer from './Data/DataManageOptions';
 import ThemeOptions from './Theme/ThemeOptions';
 
 const rootReducer = combineReducers({
-    Factories: FactoryReducer,
+    DataReducer: DataReducer,
     ThemeOptions: ThemeOptions,
     Form: ReduxFormReducer,
 })

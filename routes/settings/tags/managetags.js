@@ -1,40 +1,61 @@
-const { pool } = require('../../dbconfig');
-const moment = require('moment');
+const mongodbclient = require('../../dbconfig');
+const settings = require("../../../settings");
 
 module.exports = async (req, res) => {
   try {
-    // Check if the request body is empty
+    const client = await mongodbclient();
+
     if (Object.keys(req.body).length === 0) {
       throw new Error('Empty data set');
     }
 
-    // Check if the request body contains exactly 5 elements
-    if (Object.keys(req.body).length !== 5) {
+    if (Object.keys(req.body).length !== 4) {
       throw new Error('Incorrect dataset');
     }
 
-    const { tag_type, tag_id, tag_name, tag_status, option } = req.body;
-    const last_updated = moment().format('YYYY-MM-DD HH:mm:ss');
+    const { tag_type, tag_name, tag_status, option } = req.body;
+    const last_updated = new Date();
 
-    let sqlqry = '';
-    let values = [];
+    let collection = client.db(settings.mongodb_name).collection("master_tags");
 
-    if (option === 'insert') {
-      sqlqry = 'INSERT INTO public.master_tags(tag_type, tag_name, tag_status, last_updated) VALUES ($1, $2, $3, $4) RETURNING tag_id;';
-      values = [tag_type, tag_name, tag_status, last_updated];
-    } else if (option === 'update') {
-      sqlqry = 'UPDATE public.master_tags SET tag_type = $1, tag_name = $2, tag_status = $3, last_updated = $4 WHERE tag_id = $5 RETURNING tag_id;';
-      values = [tag_type, tag_name, tag_status, last_updated, tag_id];
+    let result;
+
+    if (option === 'insert' || option === 'update') {
+      const filter = { tag_type, tag_name };
+      const updateDoc = {
+        $set: { tag_type, tag_name, tag_status, last_updated }
+      };
+
+      const options = {
+        upsert: true, // Create a new document if not found
+        returnOriginal: false, // Return the modified document
+      };
+
+      result = await collection.findOneAndUpdate(filter, updateDoc, options);
+
+      if (!result) {
+        // Handle the case where no existing document was found (result is null)
+        result = {
+          value: { tag_type, tag_name, tag_status, last_updated },
+        };
+      }
+      // Close the MongoDB client when done
+      client.close();
     } else if (option === 'delete') {
-      sqlqry = 'DELETE FROM public.master_tags WHERE tag_id = $1 RETURNING tag_id;';
-      values = [tag_id];
+      // Delete implementation
+      const deleteResult = await collection.findOneAndDelete({ tag_type, tag_name });
+
+      if (deleteResult === null || !deleteResult) {
+        // Handle the case where no existing document was found for deletion
+        throw new Error('No document found for deletion');
+      }
+
+      result = deleteResult;
     } else {
       throw new Error('Invalid update option');
     }
 
-    const { rows } = await pool.query(sqlqry, values);
-
-    res.status(200).json({ type: 'SUCCESS', message: `New tag ${option}ed successfully!`, data: rows });
+    res.status(200).json({ type: 'SUCCESS', message: `Tag ${option}ed successfully!`, data: result.value });
   } catch (error) {
     res.status(200).json({ type: 'ERROR', message: error.message });
   }

@@ -1,40 +1,65 @@
-const { pool } = require('../../dbconfig');
+const mongodbclient = require('../../dbconfig'); // Import your MongoDB client function
 const moment = require('moment');
+const settings = require("../../../settings");
 
 module.exports = async (req, res) => {
   try {
+    const client = await mongodbclient();
+
     // Check if the request body is empty
     if (Object.keys(req.body).length === 0) {
       throw new Error('Empty data set');
     }
 
     // Check if the request body contains exactly 5 elements
-    if (Object.keys(req.body).length !== 5) {
+    if (Object.keys(req.body).length !== 4) {
       throw new Error('Incorrect dataset');
     }
 
-    const { location_id, location_name, location_address, location_status, option } = req.body;
+    const { location_name, location_address, location_status, option } = req.body;
     const last_updated = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    let sqlqry = '';
-    let values = [];
+    let collection = client.db(settings.mongodb_name).collection("master_locations"); // Update the collection name
 
-    if (option === 'insert') {
-      sqlqry = 'INSERT INTO public.master_locations(location_name, location_address, location_status, last_updated) VALUES ($1, $2, $3, $4) RETURNING location_id;';
-      values = [location_name, location_address, location_status, last_updated];
-    } else if (option === 'update') {
-      sqlqry = 'UPDATE public.master_locations SET location_name = $1, location_address = $2, location_status = $3, last_updated = $4 WHERE location_id = $5 RETURNING location_id;';
-      values = [location_name, location_address, location_status, last_updated, location_id];
+    let result;
+
+    if (option === 'insert' || option === 'update') {
+      const filter = { location_name, location_address }; // Assuming location_id is a unique identifier
+      const updateDoc = {
+        $set: { location_name, location_address, location_status, last_updated }
+      };
+
+      const options = {
+        upsert: true, // Create a new document if not found
+        returnOriginal: false, // Return the modified document
+      };
+
+      result = await collection.findOneAndUpdate(filter, updateDoc, options);
+
+      if (!result) {
+        // Handle the case where no existing document was found (result is null)
+        result = {
+          value: { location_name, location_address, location_status, last_updated },
+        };
+      }
+      
+      // Close the MongoDB client when done
+      client.close();
     } else if (option === 'delete') {
-      sqlqry = 'DELETE FROM public.master_locations WHERE location_id = $1 RETURNING location_id;';
-      values = [location_id];
+      // Delete implementation
+      const deleteResult = await collection.findOneAndDelete({ location_name, location_address });
+
+      if (deleteResult === null || !deleteResult) {
+        // Handle the case where no existing document was found for deletion
+        throw new Error('No document found for deletion');
+      }
+
+      result = deleteResult;
     } else {
       throw new Error('Invalid update option');
     }
 
-    const { rows } = await pool.query(sqlqry, values);
-
-    res.status(200).json({ type: 'SUCCESS', message: `New location ${option}ed successfully!`, data: rows });
+    res.status(200).json({ type: 'SUCCESS', message: `Location ${option}ed successfully!`, data: result.value });
   } catch (error) {
     res.status(200).json({ type: 'ERROR', message: error.message });
   }

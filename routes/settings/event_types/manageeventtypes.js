@@ -1,40 +1,65 @@
-const { pool } = require('../../dbconfig');
+const mongodbclient = require('../../dbconfig'); // Import your MongoDB client function
 const moment = require('moment');
+const settings = require("../../../settings");
 
 module.exports = async (req, res) => {
   try {
+    const client = await mongodbclient();
+
     // Check if the request body is empty
     if (Object.keys(req.body).length === 0) {
       throw new Error('Empty data set');
     }
 
-    // Check if the request body contains exactly 4 elements
-    if (Object.keys(req.body).length !== 4) {
+    // Check if the request body contains exactly 5 elements
+    if (Object.keys(req.body).length !== 3) {
       throw new Error('Incorrect dataset');
     }
 
-    const { event_type_id, event_type, event_type_status, option } = req.body;
+    const { event_type, event_type_status, option } = req.body;
     const last_updated = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    let sqlqry = '';
-    let values = [];
+    let collection = client.db(settings.mongodb_name).collection("master_event_types"); // Update the collection name
 
-    if (option === 'insert') {
-      sqlqry = 'INSERT INTO public.master_event_types(event_type, event_type_status, last_updated) VALUES ($1, $2, $3) RETURNING event_type_id;';
-      values = [event_type, event_type_status, last_updated];
-    } else if (option === 'update') {
-      sqlqry = 'UPDATE public.master_event_types SET event_type = $1, event_type_status = $2, last_updated = $3 WHERE event_type_id = $4 RETURNING event_type_id;';
-      values = [event_type, event_type_status, last_updated, event_type_id];
+    let result;
+
+    if (option === 'insert' || option === 'update') {
+      const filter = { event_type }; // Assuming location_id is a unique identifier
+      const updateDoc = {
+        $set: { event_type, event_type_status, last_updated }
+      };
+
+      const options = {
+        upsert: true, // Create a new document if not found
+        returnOriginal: false, // Return the modified document
+      };
+
+      result = await collection.findOneAndUpdate(filter, updateDoc, options);
+
+      if (!result) {
+        // Handle the case where no existing document was found (result is null)
+        result = {
+          value: { event_type, event_type_status, last_updated },
+        };
+      }
+
+      // Close the MongoDB client when done
+      client.close();
     } else if (option === 'delete') {
-      sqlqry = 'DELETE FROM public.master_event_types WHERE event_type_id = $1 RETURNING event_type_id;';
-      values = [event_type_id];
+      // Delete implementation
+      const deleteResult = await collection.findOneAndDelete({ event_type });
+
+      if (deleteResult === null || !deleteResult) {
+        // Handle the case where no existing document was found for deletion
+        throw new Error('No document found for deletion');
+      }
+
+      result = deleteResult;
     } else {
       throw new Error('Invalid update option');
     }
 
-    const { rows } = await pool.query(sqlqry, values);
-
-    res.status(200).json({ type: 'SUCCESS', message: `New event type ${option}ed successfully!`, data: rows });
+    res.status(200).json({ type: 'SUCCESS', message: `Event Type ${option}ed successfully!`, data: result.value });
   } catch (error) {
     res.status(200).json({ type: 'ERROR', message: error.message });
   }

@@ -37,12 +37,12 @@ export const JobsNav = [
     {
         icon: 'pe-7s-graph2',
         label: 'In Progress',
-        to: '#/widgets/dashboard-boxes',
+        to: '#/jobs/jobdashboard',
     },
     {
         icon: 'pe-7s-graph2',
         label: 'Manage Job Posts',
-        to: '#/widgets/dashboard-boxes',
+        to: '#/jobs/managejobs',
     }
 ];
 export const CandidatesNav = [

@@ -23,6 +23,6 @@
     "test": "node server.js",
     "start": "node server.js"
   },
-  "author": "DevonP",
+  "author": "InukshiS",
   "license": "ISC"
 }

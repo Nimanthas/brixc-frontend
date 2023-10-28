@@ -9,6 +9,7 @@ const Dashboards = lazy(() => import('../../Pages/Dashboards'));
 const Reports = lazy(() => import('../../Pages/Reports'));
 const Settings = lazy(() => import('../../Pages/Settings'));
 const Jobs = lazy(() => import('../../Pages/Jobs'));
+const Candidates = lazy(() => import('../../Pages/Candidates'));
 
 const Widgets = lazy(() => import('../../Pages/Widgets'));
 const Components = lazy(() => import('../../Pages/Components'));
@@ -45,6 +46,20 @@ const AppMain = () => {
                 </div>
             }>
                 <Route path="/jobs" component={Jobs} />
+            </Suspense>
+
+            {/* Candidates */}
+
+            <Suspense fallback={
+                <div className="loader-container">
+                    <div className="loader-container-inner">
+                        <h6 className="mt-5">
+                            Please wait while we load all the Reports
+                        </h6>
+                    </div>
+                </div>
+            }>
+                <Route path="/candidates" component={Candidates} />
             </Suspense>
 
             {/* Settings */}

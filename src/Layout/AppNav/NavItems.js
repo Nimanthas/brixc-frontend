@@ -49,7 +49,7 @@ export const CandidatesNav = [
     {
         icon: 'pe-7s-graph2',
         label: 'Candidate List',
-        to: '#/widgets/dashboard-boxes',
+        to: '#/candidates/managecandidates',
     }
 ];
 export const TalentPoolNav = [

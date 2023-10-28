@@ -74,6 +74,41 @@ export function deleteJobPost(id) {
     return { type: DELETE_JOB_POST, payload: job_id };
 }
 // End: Manage Jobs
+
+// Start: Manage Candidates
+export const FETCH_CANDIDATES = 'FETCH_CANDIDATES';
+export const ADD_CANDIDATES = 'ADD_CANDIDATES';
+export const EDIT_CANDIDATES = 'EDIT_CANDIDATES';
+export const DELETE_CANDIDATES = 'DELETE_CANDIDATES';
+
+export function fetchCandidates() {
+    return (dispatch) => {
+        fetch(`${base_api_url}managecandidates/getcandidates/0`)
+            .then((response) => response.json())
+            .then((data) => dispatch({ type: FETCH_CANDIDATES, payload: data }));
+    };
+}
+
+export function addCandidate(item) {
+    return (dispatch) => {
+        fetch(`${base_api_url}managecandidates/managecandidates`)
+            .then((response) => response.json())
+            .then(() => {
+                fetch(`${base_api_url}managecandidates/getcandidates/0`)
+                    .then((response) => response.json())
+                    .then((data) => dispatch({ type: ADD_CANDIDATES, payload: data }));
+            });
+    };
+}
+
+export function editCandidate(item) {
+    return { type: EDIT_CANDIDATES, payload: item };
+}
+
+export function deleteCandidate(id) {
+    return { type: DELETE_CANDIDATES, payload: job_id };
+}
+// End: Manage Candidates
 // End: Actions
 
 
@@ -82,6 +117,8 @@ export default function reducer(state = {
     tag_data: [],
     job_posts_data: [],
     job_posts_header: [],
+    candidates_data: [],
+    candidates_header: [],
     loading: false,
     error: null,
     success: false,
@@ -103,6 +140,14 @@ export default function reducer(state = {
         case EDIT_JOB_POST:
             return { state };
         case DELETE_JOB_POST:
+            return { state };
+        case FETCH_CANDIDATES:
+            return { ...state, candidates_data: action.payload.data, candidates_header: action.payload.header };
+        case ADD_CANDIDATES:
+            return { state };
+        case EDIT_CANDIDATES:
+            return { state };
+        case DELETE_CANDIDATES:
             return { state };
         default:
             return state;

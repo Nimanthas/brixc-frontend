@@ -13,27 +13,27 @@ module.exports = async (req, res) => {
       throw new Error('Incorrect dataset');
     }
 
-    let { job_id, tag_id, taging_status, option } = req.body;
+    let { candidate_id, tag_id, taging_status, option } = req.body;
 
-    let collection = client.db(settings.mongodb_name).collection("job_tags");
+    let collection = client.db(settings.mongodb_name).collection("candidates_tags");
 
     let result;
-    job_id = new ObjectId(job_id);
+    candidate_id = new ObjectId(candidate_id);
     tag_id = new ObjectId(tag_id);
 
     if (option === 'insert') {
       // Direct insert implementation
       const insertDoc = {
-        job_id, tag_id, taging_status
+        candidate_id, tag_id, taging_status
       };
 
       result = await collection.insertOne(insertDoc);
     } else if (option === 'update') {
       // Update implementation
-      const filter = { job_id, tag_id };
+      const filter = { candidate_id, tag_id };
       const updateDoc = {
         $set: {
-          job_id, tag_id, taging_status
+          candidate_id, tag_id, taging_status
         }
       };
 
@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
       }
     } else if (option === 'delete') {
       // Delete implementation
-      const deleteResult = await collection.findOneAndDelete({ _id: job_id });
+      const deleteResult = await collection.findOneAndDelete({ _id: candidate_id });
 
       if (deleteResult === null || !deleteResult) {
         // Handle the case where no existing document was found for deletion
@@ -60,7 +60,7 @@ module.exports = async (req, res) => {
     // Close the MongoDB client when done
     client.close();
 
-    res.status(200).json({ type: 'SUCCESS', message: `Job tag ${option}ed successfully!`, data: result.value });
+    res.status(200).json({ type: 'SUCCESS', message: `Candidate tag ${option}ed successfully!`, data: result.value });
   } catch (error) {
     res.status(200).json({ type: 'ERROR', message: error.message });
   }

@@ -8,6 +8,9 @@ const geteventtypes = require('./event_types/geteventtypes');
 const managejobtypes = require('./job_types/managejobtypes');
 const getjobtypes = require('./job_types/getjobtypes');
 
+const managecandidatetypes = require('./candidate_types/managecandidatetypes');
+const getcandidatetypes = require('./candidate_types/getcandidatetypes');
+
 const managelocations = require('./locations/managelocations');
 const getlocations = require('./locations/getlocations');
 
@@ -24,6 +27,9 @@ const gettokens = require('./tokenmanager/getzoomtoken');
 //routes
 routes.post('/manageeventtypes', manageeventtypes);
 routes.get('/geteventtypes/:event_type_id', geteventtypes);
+
+routes.post('/managecandidatetypes', managecandidatetypes);
+routes.get('/getcandidatetypes/:candidate_type_id', getcandidatetypes);
 
 routes.post('/managejobtypes', managejobtypes);
 routes.get('/getjobtypes/:job_type_id', getjobtypes);

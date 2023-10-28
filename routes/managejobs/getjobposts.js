@@ -21,30 +21,48 @@ module.exports = async (req, res) => {
 
     const filter = job_id === '0' ? {} : { _id: new ObjectId(job_id) };
 
-    // Use the aggregation framework to join with master_job_types and master_locations
+    // Use the aggregation framework with left joins
     const pipeline = [
       { $match: filter },
       {
         $lookup: {
           from: "master_job_types",
-          localField: "job_type_id",
-          foreignField: "_id",
+          let: { job_type_id: "$job_type_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$job_type_id"] }
+              }
+            }
+          ],
           as: "job_with_type"
+        }
+      },
+      {
+        $unwind: {
+          path: "$job_with_type",
+          preserveNullAndEmptyArrays: true
         }
       },
       {
         $lookup: {
           from: "master_locations",
-          localField: "job_location_id",
-          foreignField: "_id",
+          let: { job_location_id: "$job_location_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$job_location_id"] }
+              }
+            }
+          ],
           as: "job_with_location"
         }
       },
       {
-        $unwind: "$job_with_type"
-      },
-      {
-        $unwind: "$job_with_location"
+        $unwind: {
+          path: "$job_with_location",
+          preserveNullAndEmptyArrays: true
+        }
       },
       {
         $project: {
@@ -74,18 +92,30 @@ module.exports = async (req, res) => {
         }
       },
       {
-        $unwind: "$tags"
+        $unwind: {
+          path: "$tags",
+          preserveNullAndEmptyArrays: true
+        }
       },
       {
         $lookup: {
           from: "master_tags",
-          localField: "tags.tag_id",
-          foreignField: "_id",
+          let: { tag_id: "$tags.tag_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$tag_id"] }
+              }
+            }
+          ],
           as: "tag_data"
         }
       },
       {
-        $unwind: "$tag_data"
+        $unwind: {
+          path: "$tag_data",
+          preserveNullAndEmptyArrays: true
+        }
       },
       {
         $group: {
@@ -107,7 +137,7 @@ module.exports = async (req, res) => {
 
     const results = await collection.aggregate(pipeline).toArray();
 
-    // Send successful response with result documents
+    // Send a successful response with result documents
     res.status(200).json({ type: "SUCCESS", data: results, header: headers?.job_posts_data_headers });
 
     // Close the MongoDB client when done

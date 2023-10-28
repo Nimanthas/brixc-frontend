@@ -1,5 +1,6 @@
 const mongodbclient = require('../../dbconfig');
 const settings = require("../../../settings");
+const moment = require('moment');
 
 module.exports = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ module.exports = async (req, res) => {
     }
 
     const { tag_type, tag_name, tag_status, option } = req.body;
-    const last_updated = new Date();
+    const last_updated = moment().format('YYYY-MM-DD HH:mm:ss');
 
     let collection = client.db(settings.mongodb_name).collection("master_tags");
 

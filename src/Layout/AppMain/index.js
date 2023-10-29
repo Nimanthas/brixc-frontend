@@ -4,12 +4,14 @@ import React, { Suspense, lazy, Fragment } from 'react';
 import {
     ToastContainer,
 } from 'react-toastify';
+import { TalentPoolNav } from '../AppNav/NavItems';
 
 const Dashboards = lazy(() => import('../../Pages/Dashboards'));
 const Reports = lazy(() => import('../../Pages/Reports'));
 const Settings = lazy(() => import('../../Pages/Settings'));
 const Jobs = lazy(() => import('../../Pages/Jobs'));
 const Candidates = lazy(() => import('../../Pages/Candidates'));
+const TalentPool = lazy(() => import('../../Pages/TalentPool'));
 
 const Widgets = lazy(() => import('../../Pages/Widgets'));
 const Components = lazy(() => import('../../Pages/Components'));
@@ -46,6 +48,20 @@ const AppMain = () => {
                 </div>
             }>
                 <Route path="/jobs" component={Jobs} />
+            </Suspense>
+
+            {/* Talent Pool */}
+
+            <Suspense fallback={
+                <div className="loader-container">
+                    <div className="loader-container-inner">
+                        <h6 className="mt-5">
+                            Please wait while we load all the Reports
+                        </h6>
+                    </div>
+                </div>
+            }>
+                <Route path="/talentpool" component={TalentPool} />
             </Suspense>
 
             {/* Candidates */}

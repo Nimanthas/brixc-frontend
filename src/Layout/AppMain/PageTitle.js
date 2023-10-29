@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import cx from 'classnames';
 
-import TitleComponent2 from './PageTitleExamples/Variation2'
+import TitleComponent from './PageTitle/Variation1'
 
 class PageTitle extends Component {
 
@@ -34,7 +34,7 @@ class PageTitle extends Component {
                         </div>
                     </div>
                     <div className="page-title-actions">
-                        <TitleComponent2/>
+                        <TitleComponent/>
                     </div>
                 </div>
             </div>

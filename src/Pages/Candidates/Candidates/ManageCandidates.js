@@ -110,6 +110,11 @@ class ManageCandidates extends Component {
         this.setState({ itemsPerPage: event.target.value });
     };
 
+    handleScheduleMeeing = (item) => {
+        console.log(item);
+        this.setState({ addModalOpen: false, candidate: item });
+    };
+
     renderTableHeaders() {
         const { candidates_header } = this.props;
 
@@ -158,6 +163,13 @@ class ManageCandidates extends Component {
                             color="secondary"
                         >
                             Delete
+                        </Button>
+                        <Button
+                            onClick={() => this.handleScheduleMeeing(item)}
+                            variant="contained"
+                            color="warning"
+                        >
+                            Schedule Interviews
                         </Button>
                     </TableCell>
                 </TableRow>

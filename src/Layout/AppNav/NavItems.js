@@ -54,10 +54,26 @@ export const CandidatesNav = [
 ];
 export const TalentPoolNav = [
     {
-        icon: 'pe-7s-graph2',
-        label: 'Talent Pool',
-        to: '#/widgets/dashboard-boxes',
+        icon: 'pe-7s-scissors',
+        label: 'Emotions',
+        content: [
+            {
+                icon: 'pe-7s-graph2',
+                label: 'Video and Audio',
+                to: '#/talentpool/videoaudio',
+            },
+            {
+                icon: 'pe-7s-graph2',
+                label: 'Text',
+                to: '#/talentpool/text',
+            }
+        ]
     },
+    {
+        icon: 'pe-7s-graph2',
+        label: 'Traits',
+        to: '#/candidates/managecandidates',
+    }
 ];
 export const SettingsNav = [
     {

@@ -70,22 +70,32 @@ export function editJobPost(item) {
     return { type: EDIT_JOB_POST, payload: item };
 }
 
-export function deleteJobPost(id) {
+export function deleteJobPost(job_id) {
     return { type: DELETE_JOB_POST, payload: job_id };
 }
 // End: Manage Jobs
 
 // Start: Manage Candidates
 export const FETCH_CANDIDATES = 'FETCH_CANDIDATES';
+export const FETCH_CANDIDATES_NAMES = 'FETCH_CANDIDATES_NAMES';
 export const ADD_CANDIDATES = 'ADD_CANDIDATES';
 export const EDIT_CANDIDATES = 'EDIT_CANDIDATES';
 export const DELETE_CANDIDATES = 'DELETE_CANDIDATES';
+export const SUBMIT_JOB = 'SUBMIT_JOB';
 
 export function fetchCandidates() {
     return (dispatch) => {
         fetch(`${base_api_url}managecandidates/getcandidates/0`)
             .then((response) => response.json())
             .then((data) => dispatch({ type: FETCH_CANDIDATES, payload: data }));
+    };
+}
+
+export function fetchCandidatesNames() {
+    return (dispatch) => {
+        fetch(`${base_api_url}managecandidates/getcandidatesnames/0`)
+            .then((response) => response.json())
+            .then((data) => dispatch({ type: FETCH_CANDIDATES_NAMES, payload: data }));
     };
 }
 
@@ -105,8 +115,19 @@ export function editCandidate(item) {
     return { type: EDIT_CANDIDATES, payload: item };
 }
 
-export function deleteCandidate(id) {
+export function deleteCandidate(job_id) {
     return { type: DELETE_CANDIDATES, payload: job_id };
+}
+
+export function submitVideoAudioJobs(job) {
+    return (dispatch) => {
+        fetch(`${base_api_url}managecandidates/getcandidatesnames/0`, {
+            method: 'POST',
+            body: job,
+        })
+            .then((response) => response.json())
+            .then((data) => dispatch({ type: SUBMIT_JOB, payload: data }));
+    };
 }
 // End: Manage Candidates
 // End: Actions
@@ -118,7 +139,9 @@ export default function reducer(state = {
     job_posts_data: [],
     job_posts_header: [],
     candidates_data: [],
+    candidates_names_data: [],
     candidates_header: [],
+    outstanding_jobs: [],
     loading: false,
     error: null,
     success: false,
@@ -143,12 +166,16 @@ export default function reducer(state = {
             return { state };
         case FETCH_CANDIDATES:
             return { ...state, candidates_data: action.payload.data, candidates_header: action.payload.header };
+        case FETCH_CANDIDATES_NAMES:
+            return { ...state, candidates_names_data: action.payload.data };
         case ADD_CANDIDATES:
             return { state };
         case EDIT_CANDIDATES:
             return { state };
         case DELETE_CANDIDATES:
             return { state };
+            case SUBMIT_JOB:
+                return { ...state, outstanding_jobs: action.payload.data };
         default:
             return state;
     }

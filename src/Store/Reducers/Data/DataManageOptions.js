@@ -121,7 +121,7 @@ export function deleteCandidate(job_id) {
 
 export function submitVideoAudioJobs(job) {
     return (dispatch) => {
-        fetch(`${base_api_url}managecandidates/getcandidatesnames/0`, {
+        fetch(`${base_api_url}analyzecandidates/analyzevideoandaudio`, {
             method: 'POST',
             body: job,
         })

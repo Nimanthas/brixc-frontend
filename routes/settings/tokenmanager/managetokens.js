@@ -1,5 +1,4 @@
-const { pool } = require('../../dbconfig');
-const moment = require('moment');
+const { MongoClient } = require('mongodb');
 const settings = require("../../../settings");
 
 module.exports = async (req) => {
@@ -9,35 +8,66 @@ module.exports = async (req) => {
       throw new Error('Empty data set');
     }
 
-    // Check if the request body contains exactly 5 elements
+    // Check if the request body contains exactly 7 elements
     if (Object.keys(req).length !== 7) {
       throw new Error('Incorrect dataset');
     }
 
     const { token_id, token_type, token_name, token, token_status, option, expires_in } = req;
-    const last_updated = moment().format('YYYY-MM-DD HH:mm:ss');
-    const expired_on = moment(last_updated, 'YYYY-MM-DD HH:mm:ss').add(expires_in - settings.api_token_expireing_tolerance, 'seconds').format('YYYY-MM-DD HH:mm:ss');
+    const last_updated = new Date().toISOString();
+    const expired_on = new Date(Date.now() + (expires_in - settings.api_token_expiring_tolerance) * 1000).toISOString();
 
-    let sqlqry = '';
-    let values = [];
+    // Establish a connection to the MongoDB database
+    const client = await MongoClient.connect(settings.mongodb_url, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    const db = client.db(settings.mongodb_name);
+
+    let collection = db.collection("token_manager");
+    let result;
 
     if (option === 'insert') {
-      sqlqry = 'INSERT INTO public.token_manager(token_type, token_name, token, token_status, last_updated, expired_on) VALUES ($1, $2, $3, $4, $5, $6) RETURNING token_id;';
-      values = [token_type, token_name, token, token_status, last_updated, expired_on];
+      // Insert a new document and return the inserted document
+      result = await collection.insertOne({
+        token_type,
+        token_name,
+        token,
+        token_status,
+        last_updated,
+        expired_on
+      });
     } else if (option === 'update') {
-      sqlqry = 'UPDATE public.token_manager SET token_type = $1, token_name = $2, token = $3, token_status = $4, last_updated = $5, expired_on = $6 WHERE token_id = $7 RETURNING token_id;';
-      values = [token_type, token_name, token, token_status, last_updated, expired_on, token_id];
+      // Update the document and return the updated document
+      result = await collection.findOneAndUpdate(
+        { _id: token_id },
+        {
+          $set: {
+            token_type,
+            token_name,
+            token,
+            token_status,
+            last_updated,
+            expired_on
+          }
+        },
+        { returnOriginal: false }
+      );
     } else if (option === 'delete') {
-      sqlqry = 'DELETE FROM public.token_manager WHERE token_id = $1 RETURNING token_id;';
-      values = [token_id];
+      // Delete the document and return the deleted document
+      result = await collection.findOneAndDelete({ _id: token_id });
     } else {
       throw new Error('Invalid update option');
     }
 
-    const { rows } = await pool.query(sqlqry, values);
-    
-    return { rows, expired_on };
+    client.close();
 
+    if (!result.value) {
+      throw new Error('Document not found');
+    }
+
+    return { rows: result.value, expired_on };
   } catch (error) {
     throw new Error('Error in saving token details, ' + error.message);
   }

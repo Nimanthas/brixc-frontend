@@ -10,6 +10,7 @@ const integrations = require('./integrations');
 const auth = require('./auth');
 const managejobs = require('./managejobs');
 const managecandidates = require('./managecandidates');
+const analyzecandidates = require('./analyzecandidates');
 
 routes.get('/', (req, res) => {
   res.status(200).json({ message: 'brixc api connected!' });
@@ -20,6 +21,7 @@ routes.use('/settings', settings);
 routes.use('/managemeetings', managemeetings);
 routes.use('/managejobs', managejobs);
 routes.use('/managecandidates', managecandidates);
+routes.use('/analyzecandidates', analyzecandidates);
 
 //Apply middleware authentication to all routes after this
 routes.use(authenticateToken);

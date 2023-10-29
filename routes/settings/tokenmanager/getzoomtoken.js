@@ -1,4 +1,5 @@
-const { pool } = require('../../dbconfig');
+const mongodbclient = require('../../dbconfig');
+const settings = require("../../../settings");
 const moment = require('moment');
 const getzoomrefreshtoken = require('./getzoomrefreshtoken');
 
@@ -8,29 +9,46 @@ module.exports = async (token_id) => {
       throw new Error("Oops! Empty data set in header on get tags request.");
     }
 
-    const sqlqry = `
-      SELECT token, expired_on FROM public.token_manager WHERE token_id = '${token_id}' ORDER BY last_updated DESC LIMIT 1;
-    `;
+    // Get the MongoDB client
+    const client = await mongodbclient();
 
-    const { rows } = await pool.query(sqlqry);
+    // Access the database and collection
+    let collection = client.db(settings.mongodb_name).collection('token_manager');
 
-    if (rows.length > 0) {
+    // Build a filter to find the token by _id
+    const filter = { token_id: token_id };
 
-      // Create moment objects for current time and expired_on time
-      const current_time = moment();
-      const expired_on = moment(rows[0].expired_on, 'YYYY-MM-DD HH:mm:ss');
+    // Find the token document matching the filter
+    let tokenDocument = await collection.find(filter).sort({ token_id: -1 }).toArray();
+
+    if (tokenDocument[0] != null) {
+      // Get the current time
+      const current_time = moment().format('YYYY-MM-DD HH:mm:ss');
+      let { token, expired_on } = tokenDocument[0];
+
+      // Convert the 'expired_on' field to a Date object
+      const _expired_on = moment(expired_on, 'YYYY-MM-DD HH:mm:ss');
 
       // Calculate the difference in seconds
-      const differenceInSeconds = expired_on.diff(current_time, 'seconds');
+      const differenceInSeconds = _expired_on.diff(current_time, 'seconds');
 
-      // Check for remaining time in token
+      // Check for remaining time in the token
       if (differenceInSeconds < 5) {
-        rows[0].token = await getzoomrefreshtoken(rows[0]?.token);
-      }
-    }
 
-    return rows[0]?.token;
+        token = await getzoomrefreshtoken(token, filter);
+
+        // Update the token in the MongoDB collection
+        await collection.updateOne(filter, { $set: { token: token } });
+      }
+
+      // Close the MongoDB client when done
+      client.close();
+      // Return the token
+      return token;
+    } else {
+      throw new Error("Token not found");
+    }
   } catch (error) {
-    throw new Error(`Error in getting the token details, ${error.message}`);
+    throw new Error(`Error in getting or updating the token details: ${error.message}`);
   }
 };

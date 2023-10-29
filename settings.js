@@ -20,5 +20,6 @@ module.exports = {
   integration_password: "brixcapi",
   token_refresh_timeout: process.env.TOKEN_REFRESH_TIMEOUT || '3d',
   token_access_timeout: process.env.TOKEN_ACCESS_TIMEOUT || '60m',
-  token_issuer: process.env.TOKEN_ISSUER || 'brixc-digital-automation'
+  token_issuer: process.env.TOKEN_ISSUER || 'brixc-digital-automation',
+  analyzer_url: process.env.ANALYZER_URL || 'http://127.0.0.1:5000',
 };

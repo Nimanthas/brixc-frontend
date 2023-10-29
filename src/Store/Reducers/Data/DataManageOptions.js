@@ -1,4 +1,5 @@
 const base_api_url = 'http://localhost:8280/';
+const analyze_api_url = 'http://127.0.0.1:5000/';
 
 // Start: Actions
 // Start: Master 
@@ -121,14 +122,19 @@ export function deleteCandidate(job_id) {
 
 export function submitVideoAudioJobs(job) {
     return (dispatch) => {
-        fetch(`${base_api_url}analyzecandidates/analyzevideoandaudio`, {
-            method: 'POST',
-            body: job,
-        })
+        const sendOptions = { method: "POST", body: job };
+
+        fetch(`${analyze_api_url}analyzevideo`, sendOptions)
             .then((response) => response.json())
-            .then((data) => dispatch({ type: SUBMIT_JOB, payload: data }));
+            .then((data) => {
+                console.log(data);
+                fetch(`${base_api_url}analyzecandidates/analyzevideoandaudio/0`, sendOptions)
+                    .then((response) => response.json())
+                    .then((data) => dispatch({ type: SUBMIT_JOB, payload: data }));
+            });
     };
 }
+
 // End: Manage Candidates
 // End: Actions
 
@@ -174,8 +180,8 @@ export default function reducer(state = {
             return { state };
         case DELETE_CANDIDATES:
             return { state };
-            case SUBMIT_JOB:
-                return { ...state, outstanding_jobs: action.payload.data };
+        case SUBMIT_JOB:
+            return { ...state, outstanding_jobs: action.payload.data };
         default:
             return state;
     }

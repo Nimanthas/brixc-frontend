@@ -21,7 +21,7 @@ class SubmitVoiceAudio extends React.Component {
         super(props);
         this.state = {
             selectcandidate: '', // Store the selected candidate ID here
-            videoFile: null,     // Store the selected file here
+            video_file: null,     // Store the selected file here
         };
     }
 
@@ -34,22 +34,21 @@ class SubmitVoiceAudio extends React.Component {
     }
 
     handleFileChange = (e) => {
-        this.setState({ videoFile: e.target.files[0] });
+        this.setState({ video_file: e.target.files[0] });
     }
 
     submitJob = () => {
-        const { selectcandidate, videoFile } = this.state;
+        const { selectcandidate, video_file } = this.state;
 
-        if (selectcandidate && videoFile) {
+        if (selectcandidate && video_file) {
             const job = new FormData();
-            job.append('candidate_id', selectcandidate);
-            job.append('video_file', videoFile);
+            job.append('video', video_file);
             this.props.submitVideoAudioJobs(job);
 
             // Reset the form after submission
             this.setState({
                 selectcandidate: '',
-                videoFile: null,
+                video_file: null,
             });
         } else {
             // Handle validation or show an error message
@@ -59,11 +58,11 @@ class SubmitVoiceAudio extends React.Component {
     clearForm = () => {
         this.setState({
             selectcandidate: '',
-            videoFile: null,
+            video_file: null,
         });
 
         // Clear the file input field
-        document.getElementById('videoFile').value = '';
+        document.getElementById('video_file').value = '';
     }
 
     renderCandidates() {
@@ -106,11 +105,11 @@ class SubmitVoiceAudio extends React.Component {
                                         <Form>
                                             <FormGroup>{this.renderCandidates()}</FormGroup>
                                             <FormGroup>
-                                                <Label for="videoFile">Meeting Recording Video File</Label>
+                                                <Label for="video_file">Meeting Recording Video File</Label>
                                                 <Input
                                                     type="file"
                                                     name="file"
-                                                    id="videoFile"
+                                                    id="video_file"
                                                     onChange={this.handleFileChange}
                                                 />
                                                 <FormText color="muted">

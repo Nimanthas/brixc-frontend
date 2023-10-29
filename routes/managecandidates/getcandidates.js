@@ -83,18 +83,20 @@ module.exports = async (req, res) => {
           candidate_status: { $first: "$candidate_status" },
           tags: { $push: { tag_name: "$tag_data.tag_name" } },
           inbound_date: { $first: "$inbound_date" },
-          last_updated: { $first: "$last_updated" }
+          last_updated: { $first: "$last_updated" },
+          meeting_id: { $first: "$meeting_id" },
+          join_url: { $first: "$join_url" }
         }
       }
     ];
 
-    const results = await collection.aggregate(pipeline).toArray();
+    const results = await collection.aggregate(pipeline).sort({ last_updated: -1 }).toArray();
 
     // Send a successful response with result documents
     res.status(200).json({ type: "SUCCESS", data: results, header: headers?.candidates_data_headers });
 
     // Close the MongoDB client when done
-    client.close();
+    //client.close();
   } catch (error) {
     // Handle errors by sending an error response with an error message
     res.status(200).json({ type: "ERROR", message: error.message });

@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
     }
 
     // Close the MongoDB client when done
-    client.close();
+    //client.close();
 
     res.status(200).json({ type: 'SUCCESS', message: `Job ${option}ed successfully!`, data: result.value });
   } catch (error) {

@@ -68,7 +68,7 @@ module.exports = async (access_token, filter) => {
     }
 
     // Close the MongoDB client
-    client.close();
+    //client.close();
 
     // Return the token as the response
     return access_token;

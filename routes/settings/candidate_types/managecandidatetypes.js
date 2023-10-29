@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
       }
 
       // Close the MongoDB client when done
-      client.close();
+      //client.close();
     } else if (option === 'delete') {
       // Delete implementation
       const deleteResult = await collection.findOneAndDelete({ candidate_type });

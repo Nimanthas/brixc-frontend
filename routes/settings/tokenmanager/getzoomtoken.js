@@ -42,7 +42,7 @@ module.exports = async (token_id) => {
       }
 
       // Close the MongoDB client when done
-      client.close();
+      //client.close();
       // Return the token
       return token;
     } else {

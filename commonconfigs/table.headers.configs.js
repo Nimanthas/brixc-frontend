@@ -23,6 +23,15 @@ module.exports = {
         { "header_name": "Status", "header_value": "candidate_status", "hidden": false, "sortable": false, "filterable": false, "type": "number", "editable": true },
         { "header_name": "Tags", "header_value": "tags", "hidden": false, "sortable": false, "filterable": false, "type": "array", "editable": false },
         { "header_name": "Applied Date", "header_value": "inbound_date", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": false },
-        { "header_name": "Last Update", "header_value": "last_updated", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": false }
+        { "header_name": "Last Update", "header_value": "last_updated", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": false },
+        { "header_name": "Meeting ID", "header_value": "meeting_id", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": false },
+        { "header_name": "Join URL", "header_value": "join_url", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": false }
+    ],
+    "pending_jobs_data_headers": [
+        { "header_name": "Job ID", "header_value": "_id", "hidden": true, "sortable": false, "filterable": false, "type": "text", "editable": false },
+        { "header_name": "Candidate Name", "header_value": "candidate_name", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": false },
+        { "header_name": "Task ID", "header_value": "task_id", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": true },
+        { "header_name": "Task Status", "header_value": "task_status", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": true },
+        { "header_name": "Last Update", "header_value": "last_updated", "hidden": false, "sortable": false, "filterable": false, "type": "text", "editable": true }
     ]
 }

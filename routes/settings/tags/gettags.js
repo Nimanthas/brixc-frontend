@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
     res.status(200).json({ type: "SUCCESS", data: results });
 
     // Close the MongoDB client when done
-    client.close();
+    //client.close();
   } catch (error) {
     // Handle errors by sending an error response with an error message
     res.status(200).json({ type: "ERROR", message: error.message });

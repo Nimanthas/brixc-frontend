@@ -31,13 +31,13 @@ module.exports = async (req, res) => {
       { $project: { _id: 1, candidate_name: 1 } }
     ];
 
-    const results = await collection.aggregate(pipeline).toArray();
+    const results = await collection.aggregate(pipeline).sort({ candidate_name: -1 }).toArray();
 
     // Send a successful response with result documents
     res.status(200).json({ type: 'SUCCESS', data: results });
 
     // Close the MongoDB client when done
-    client.close();
+    //client.close();
   } catch (error) {
     // Handle errors by sending an error response with an error message
     res.status(200).json({ type: 'ERROR', message: error.message });

@@ -11,11 +11,11 @@ module.exports = async (req, res) => {
       throw new Error('Empty data set');
     }
 
-    if (Object.keys(req.body).length !== 8) {
+    if (Object.keys(req.body).length !== 10 && Object.keys(req.body).length !== 4) {
       throw new Error('Incorrect dataset');
     }
 
-    let { candidate_id, candidate_external_id, candidate_name, candidate_email, candidate_status, candidate_contact_number, job_id, option } = req.body;
+    let { candidate_id, candidate_external_id, candidate_name, candidate_email, candidate_status, candidate_contact_number, job_id, meeting_id, join_url, option } = req.body;
     const last_updated = moment().format('YYYY-MM-DD HH:mm:ss');
     const inbound_date = moment().format('YYYY-MM-DD HH:mm:ss');
 
@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     if (option === 'insert') {
       // Direct insert implementation
       const insertDoc = {
-        candidate_external_id, candidate_name, candidate_email, inbound_date, candidate_status, candidate_contact_number, job_id, last_updated
+        candidate_external_id, candidate_name, candidate_email, inbound_date, candidate_status, candidate_contact_number, job_id, last_updated, meeting_id, join_url
       };
 
       result = await collection.insertOne(insertDoc);
@@ -37,7 +37,22 @@ module.exports = async (req, res) => {
       const filter = { _id: candidate_id };
       const updateDoc = {
         $set: {
-          candidate_external_id, candidate_name, candidate_email, candidate_status, candidate_contact_number, job_id, last_updated
+          candidate_external_id, candidate_name, candidate_email, candidate_status, candidate_contact_number, job_id, last_updated, meeting_id, join_url
+        }
+      };
+
+      result = await collection.findOneAndUpdate(filter, updateDoc);
+
+      if (!result) {
+        // Handle the case where no existing document was found for update
+        throw new Error('No document found for update');
+      }
+    } else if (option === 'update_meeting') {
+      // Update implementation
+      const filter = { _id: candidate_id };
+      const updateDoc = {
+        $set: {
+          meeting_id, join_url, last_updated
         }
       };
 
@@ -62,7 +77,7 @@ module.exports = async (req, res) => {
     }
 
     // Close the MongoDB client when done
-    client.close();
+    //client.close();
 
     res.status(200).json({ type: 'SUCCESS', message: `Candidate ${option}ed successfully!`, data: result.value });
   } catch (error) {

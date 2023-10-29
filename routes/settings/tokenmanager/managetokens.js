@@ -61,7 +61,7 @@ module.exports = async (req) => {
       throw new Error('Invalid update option');
     }
 
-    client.close();
+    //client.close();
 
     if (!result.value) {
       throw new Error('Document not found');

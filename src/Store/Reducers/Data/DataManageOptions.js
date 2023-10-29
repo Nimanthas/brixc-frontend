@@ -1,5 +1,6 @@
-const base_api_url = 'http://localhost:8280/';
-const analyze_api_url = 'http://127.0.0.1:5000/';
+
+const base_api_url = 'https://backend-brixc.koyeb.app/';
+const analyze_api_url = 'http://localhost:8281/';
 
 // Start: Actions
 // Start: Master 
@@ -80,9 +81,12 @@ export function deleteJobPost(job_id) {
 export const FETCH_CANDIDATES = 'FETCH_CANDIDATES';
 export const FETCH_CANDIDATES_NAMES = 'FETCH_CANDIDATES_NAMES';
 export const ADD_CANDIDATES = 'ADD_CANDIDATES';
+export const SCHEDULE_INTERVIEW = 'SCHEDULE_INTERVIEW';
 export const EDIT_CANDIDATES = 'EDIT_CANDIDATES';
 export const DELETE_CANDIDATES = 'DELETE_CANDIDATES';
 export const SUBMIT_JOB = 'SUBMIT_JOB';
+export const FETCH_PENDING_JOBS = 'FETCH_PENDING_JOBS';
+export const FETCH_JOB_RESULT = 'FETCH_JOB_RESULT';
 
 export function fetchCandidates() {
     return (dispatch) => {
@@ -120,21 +124,88 @@ export function deleteCandidate(job_id) {
     return { type: DELETE_CANDIDATES, payload: job_id };
 }
 
-export function submitVideoAudioJobs(job) {
-    return (dispatch) => {
+export function scheduleInterview(item) {
+    return async (dispatch) => {
+
+        try {
+            let job_data = {};
+
+            const response2 = await fetch(`${base_api_url}managemeetings/createnewmeeting`, {
+                method: "POST",
+                body: JSON.stringify(job_data), // Convert to JSON
+                headers: {
+                    'Content-Type': 'application/json', // Set the content type
+                },
+            });
+
+            const data2 = await response2.json();
+            let update = { "meeting_id": data2.data.meeting_id, "join_url": data2.data.join_url, "candidate_id": item._id, "option": "update_meeting" };
+
+            const response3 = await fetch(`${base_api_url}managecandidates/managecandidates`, {
+                method: "POST",
+                body: JSON.stringify(update), // Convert to JSON
+                headers: {
+                    'Content-Type': 'application/json', // Set the content type
+                },
+            });
+
+            fetch(`${base_api_url}managecandidates/getcandidates/0`)
+                .then((response) => response.json())
+                .then((data) => dispatch({ type: SCHEDULE_INTERVIEW, payload: data }));
+        } catch (error) {
+            dispatch({ type: SCHEDULE_INTERVIEW, payload: error.message });
+        }
+    };
+}
+
+export function submitVideoAudioJobs(job, selectcandidate) {
+    return async (dispatch) => {
         const sendOptions = { method: "POST", body: job };
 
-        fetch(`${analyze_api_url}analyzevideo`, sendOptions)
+        try {
+            const response1 = await fetch(`${analyze_api_url}analyzevideo`, sendOptions);
+            const data1 = await response1.json();
+            let job_data = { ...data1 };
+            job_data["candidate_id"] = selectcandidate;
+            job_data["task_status"] = 10;
+            job_data["option"] = "insert";
+
+
+            const response2 = await fetch(`${base_api_url}analyzecandidates/analyzevideoandaudio`, {
+                method: "POST",
+                body: JSON.stringify(job_data), // Convert to JSON
+                headers: {
+                    'Content-Type': 'application/json', // Set the content type
+                },
+            });
+            const data2 = await response2.json();
+
+            dispatch({ type: SUBMIT_JOB, payload: job_data });
+        } catch (error) {
+            dispatch({ type: SUBMIT_JOB, payload: error.message });
+        }
+    };
+}
+
+export function fetchPendingJobs() {
+    return (dispatch) => {
+        fetch(`${base_api_url}analyzecandidates/getpendinganalyzejobs/0`)
             .then((response) => response.json())
             .then((data) => {
-                console.log(data);
-                fetch(`${base_api_url}analyzecandidates/analyzevideoandaudio/0`, sendOptions)
-                    .then((response) => response.json())
-                    .then((data) => dispatch({ type: SUBMIT_JOB, payload: data }));
+                dispatch({ type: FETCH_PENDING_JOBS, payload: data })
             });
     };
 }
 
+export function fetchJobResult(task_id) {
+    return (dispatch) => {
+        fetch(`${analyze_api_url}getresult/${task_id}`)
+            .then((response) => response.json())
+            .then((data) => {
+                dispatch({ type: FETCH_JOB_RESULT, payload: data })
+            });
+    };
+}
 // End: Manage Candidates
 // End: Actions
 
@@ -147,7 +218,14 @@ export default function reducer(state = {
     candidates_data: [],
     candidates_names_data: [],
     candidates_header: [],
+    job_subission_output: [],
     outstanding_jobs: [],
+    outstanding_jobs_header: [],
+    average_job_result: [],
+    job_result: [],
+    traits: [],
+    dominant_trait: [],
+    meeting_scheduled_details: [],
     loading: false,
     error: null,
     success: false,
@@ -174,6 +252,8 @@ export default function reducer(state = {
             return { ...state, candidates_data: action.payload.data, candidates_header: action.payload.header };
         case FETCH_CANDIDATES_NAMES:
             return { ...state, candidates_names_data: action.payload.data };
+        case SCHEDULE_INTERVIEW:
+            return { ...state, candidates_data: action.payload.data, candidates_header: action.payload.header };
         case ADD_CANDIDATES:
             return { state };
         case EDIT_CANDIDATES:
@@ -181,7 +261,11 @@ export default function reducer(state = {
         case DELETE_CANDIDATES:
             return { state };
         case SUBMIT_JOB:
-            return { ...state, outstanding_jobs: action.payload.data };
+            return { ...state, job_subission_output: action.payload.data };
+        case FETCH_PENDING_JOBS:
+            return { ...state, outstanding_jobs: action.payload.data, outstanding_jobs_header: action.payload.header };
+        case FETCH_JOB_RESULT:
+            return { ...state, average_job_result: action.payload.average_emotions, job_result: action.payload.emotions, traits: action.payload.traits, dominant_trait: action.payload.dominant_trait };
         default:
             return state;
     }

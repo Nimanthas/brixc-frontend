@@ -19,6 +19,7 @@ import {
     addCandidate,
     editCandidate,
     deleteCandidate,
+    scheduleInterview
 } from '../../../Store/Reducers/Data/DataManageOptions';
 import {
     Row,
@@ -112,7 +113,7 @@ class ManageCandidates extends Component {
 
     handleScheduleMeeing = (item) => {
         console.log(item);
-        this.setState({ addModalOpen: false, candidate: item });
+        this.props.scheduleInterview(item);
     };
 
     renderTableHeaders() {
@@ -204,7 +205,7 @@ class ManageCandidates extends Component {
                                         </Button>
                                     </Col>
                                 </Row>
-                                <Paper>
+                                <Paper style={{ maxWidth: '85%', overflowY: 'auto' }}>
                                     <Table>
                                         <TableHead>{this.renderTableHeaders()}</TableHead>
                                         <TableBody>{this.renderTableRows()}</TableBody>
@@ -345,8 +346,9 @@ class ManageCandidates extends Component {
 const mapStateToProps = (state) => ({
     candidates_data: state.DataReducer.candidates_data,
     candidates_header: state.DataReducer.candidates_header,
+    meeting_scheduled_details: state.DataReducer.meeting_scheduled_details,
 });
 
-const mapDispatchToProps = { fetchCandidates, addCandidate, editCandidate, deleteCandidate };
+const mapDispatchToProps = { fetchCandidates, addCandidate, editCandidate, deleteCandidate, scheduleInterview };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ManageCandidates);

@@ -7,6 +7,7 @@ import PageTitle from '../../../../Layout/AppMain/PageTitle';
 // Examples
 
 import SubmitVoiceAudio from './Submit/SubmitAnalyzeJob';
+import ViewAnalyzeJob from './Submit/ViewAnalyzeJob';
 
 const tabsContent = [
     {
@@ -14,8 +15,8 @@ const tabsContent = [
         content: <SubmitVoiceAudio/>
     },
     {
-        title: 'Jobs Summary',
-        content: <SubmitVoiceAudio/>
+        title: 'View',
+        content: <ViewAnalyzeJob/>
     },
 ];
 

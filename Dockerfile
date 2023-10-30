@@ -4,6 +4,8 @@ FROM node:14
 # Set the working directory in the container
 WORKDIR /app
 
+RUN npm install -g cross-env@7
+
 # Create a non-root user
 RUN useradd -ms /bin/bash myuser
 

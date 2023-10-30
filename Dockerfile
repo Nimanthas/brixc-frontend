@@ -21,6 +21,8 @@ USER root
 # Copy the rest of your application files to the container
 COPY . .
 
+RUN npm cache clean --force
+
 # Install application dependencies in the user's home directory
 RUN sudo npm install
 

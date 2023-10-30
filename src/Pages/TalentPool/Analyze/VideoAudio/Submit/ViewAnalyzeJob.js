@@ -453,6 +453,9 @@ class ViewAnalyzeJob extends React.Component {
                                             <Row>
                                                 <Col>
                                                     <Row className="mb-3">
+                                                        Status: {traits.length > 0 ? "Completed" : "Task not found or not completed yet. Failed to get result"}
+                                                    </Row>
+                                                    <Row className="mb-3">
                                                         Dominant Trait: {dominant_trait[0]}
                                                     </Row>
                                                     <Row className="mb-3">

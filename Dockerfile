@@ -13,11 +13,11 @@ USER myuser
 # Copy package.json and package-lock.json to the container
 COPY package*.json ./
 
-# Install application dependencies in the user's home directory
-RUN npm install
-
 # Switch back to the root user
 USER root
+
+# Install application dependencies in the user's home directory
+RUN npm install
 
 # Copy the rest of your application files to the container
 COPY . .

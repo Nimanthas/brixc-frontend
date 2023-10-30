@@ -1,11 +1,14 @@
-# Use an official Nginx runtime as a parent image
-FROM nginx:alpine
+# Use an official Node.js runtime as a parent image
+FROM node:14
 
-# Copy the contents of the build directory into the Nginx web root
-COPY ./build /usr/share/nginx/html
+# Set the working directory in the container
+WORKDIR /app
 
-# Expose the default HTTP port (80)
-EXPOSE 80
+# Copy the built application (from your local machine) into the container
+COPY ./build /app
 
-# Start Nginx when the container starts
-CMD ["nginx", "-g", "daemon off;"]
+# Expose the port your application will run on (if needed)
+EXPOSE 3000
+
+# Define the command to run your application
+CMD ["npx", "serve", "-s", "build"]

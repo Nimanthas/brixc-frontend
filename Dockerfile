@@ -21,12 +21,12 @@ USER root
 # Copy the rest of your application files to the container
 COPY . .
 
-USER myuser
-
 RUN npm cache clean --force
 
 # Install application dependencies in the user's home directory
 RUN npm install --force
+
+USER myuser
 
 # Expose the port your application will run on (if needed)
 EXPOSE 3000

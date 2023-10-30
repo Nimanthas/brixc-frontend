@@ -1,29 +1,29 @@
-# Use an official Node.js runtime as the base image
+# Use an official Node.js runtime as a parent image
 FROM node:14
 
 # Set the working directory in the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Create a non-root user
-RUN groupadd -r myuser && useradd -r -g myuser myuser
-
-# Give the non-root user ownership of the working directory
-RUN chown -R myuser:myuser /usr/src/app
+RUN useradd -ms /bin/bash myuser
 
 # Change to the non-root user
 USER myuser
 
-# Copy the package.json and package-lock.json files to the working directory
+# Copy package.json and package-lock.json to the container
 COPY package*.json ./
 
-# Install project dependencies, including cross-env
-RUN npm install cross-env --save && npm install
+# Install application dependencies in the user's home directory
+RUN npm install
 
-# Copy the application code to the container
+# Switch back to the root user
+USER root
+
+# Copy the rest of your application files to the container
 COPY . .
 
-# Expose the port your application will run on (adjust as needed)
-EXPOSE 3000
+# Expose the port your application will run on (if needed)
+# EXPOSE 3000
 
-# Start your application
-CMD [ "npm", "start" ]
+# Define the command to run your application
+CMD ["npm", "start"]

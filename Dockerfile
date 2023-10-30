@@ -22,10 +22,10 @@ USER root
 COPY . .
 
 # Install application dependencies in the user's home directory
-RUN npm install
+RUN sudo npm install
 
 # Expose the port your application will run on (if needed)
-# EXPOSE 3000
+EXPOSE 3000
 
 RUN npm run build
 

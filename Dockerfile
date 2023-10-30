@@ -18,14 +18,16 @@ COPY package*.json ./
 # Switch back to the root user
 USER root
 
-# Install application dependencies in the user's home directory
-RUN npm install
-
 # Copy the rest of your application files to the container
 COPY . .
 
+# Install application dependencies in the user's home directory
+RUN npm install
+
 # Expose the port your application will run on (if needed)
 # EXPOSE 3000
+
+RUN npm run build
 
 # Define the command to run your application
 CMD ["npm", "start"]

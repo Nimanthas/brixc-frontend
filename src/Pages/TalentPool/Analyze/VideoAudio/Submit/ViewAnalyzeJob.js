@@ -392,7 +392,7 @@ class ViewAnalyzeJob extends React.Component {
                     transitionLeave={false}>
                     <div>
                         <Row>
-                            <Col md="6">
+                            <Col md="12">
                                 <Col md="12">
                                     <Card className="main-card mb-3">
                                         <CardBody>
@@ -431,7 +431,7 @@ class ViewAnalyzeJob extends React.Component {
                                     </Card>
                                 </Col>
                             </Col>
-                            <Col md="6">
+                            <Col md="12">
                                 <Col md="12">
                                     <Card className="main-card mb-3">
                                         <CardBody>
